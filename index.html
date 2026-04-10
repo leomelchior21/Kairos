@@ -535,8 +535,11 @@ textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
-// Auto-detect: localhost = local LM Studio, else = Vercel proxy
-var IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Auto-detect: localhost, 127.0.0.1, or file:// = local LM Studio
+var IS_LOCAL = window.location.hostname === 'localhost' 
+            || window.location.hostname === '127.0.0.1' 
+            || window.location.protocol === 'file:';
+
 const API_URL = IS_LOCAL
   ? 'http://localhost:1234/v1/chat/completions'
   : '/api/chat';
