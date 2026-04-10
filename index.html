@@ -551,17 +551,6 @@ const STAGES = [
   { name: 'unlock',      label: 'your answer awaits',            exchanges: 8 }
 ];
 
-const CURRICULUM = {
-  '5th grade':  ['earth science','living things','energy','water cycle','communities','simple machines'],
-  '6th grade':  ['ecosystems','matter','ancient civilizations','climate','gravity','cells'],
-  '7th grade':  ['sustainability','climate change','inequality','UN goals','renewable energy','urbanization'],
-  '8th grade':  ['physics','chemistry','human body','modern history','technology','forces'],
-  '9th grade':  ['electricity','circuits','programming','sensors','logic gates','automation'],
-  '1st year HS':['mechanics','atomic structure','genetics','algebra','world history'],
-  '2nd year HS':['thermodynamics','genetics','philosophy','statistics','literature'],
-  '3rd year HS':['college prep','essays','calculus','biochemistry','ethics'],
-};
-
 // ═══════════════════════════════════════════
 // BLOB CANVAS
 // ═══════════════════════════════════════════
@@ -1003,111 +992,20 @@ function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault
 // ═══════════════════════════════════════════
 function buildSystemPrompt() {
   var ctx = {
-    '5th grade':  '5th grade student (age 10-11). Keep language simple. Use concrete examples from their daily life.',
-    '6th grade':  '6th grade student (age 11-12). Can handle basic abstract concepts.',
-    '7th grade':  '7th grade student (age 12-13). Studying sustainability, climate, UN SDGs, social issues.',
-    '8th grade':  '8th grade student (age 13-14). Studying physics, chemistry, biology, modern history.',
-    '9th grade':  '9th grade student (age 14-15). Studying electricity, circuits, programming, sensors.',
-    '1st year HS':'First year high school (age 15-16). Mechanics, atomic structure, genetics, algebra.',
-    '2nd year HS':'Second year high school (age 16-17). Thermodynamics, genetics, philosophy, statistics.',
-    '3rd year HS':'Third year high school (age 17-18). College prep, advanced topics, entrance exams.',
+    '5th grade':  'age 10-11, keep language simple',
+    '6th grade':  'age 11-12',
+    '7th grade':  'age 12-13, knows sustainability, climate, SDGs',
+    '8th grade':  'age 13-14, knows physics, chemistry, biology',
+    '9th grade':  'age 14-15, knows electricity, circuits, sensors',
+    '1st year HS':'age 15-16, mechanics, atomic structure, genetics',
+    '2nd year HS':'age 16-17, thermodynamics, genetics, philosophy',
+    '3rd year HS':'age 17-18, college prep, advanced topics',
   };
-
-  var exchange = exchangeCount;
-  var topic = '';
-  if (history.length > 0) {
-    topic = history[0].content.substring(0, 200);
-  }
-
-  var curriculumTopics = CURRICULUM[grade] || [];
-  var curriculumStr = curriculumTopics.join(', ');
-
-  return `You are Kai, a calm Socratic thinking guide for a ${grade} student (${ctx[grade]}).
-
-STUDENT TOPIC: "${topic}"
-
-CURRICULUM CONNECTIONS (use ONLY when genuinely relevant to the student's topic):
-${curriculumStr}
-
-YOUR JOB: Guide the student to discover the answer through progressive questioning. NEVER give the answer directly until the final synthesis.
-
-EXCHANGE ${exchange + 1} — Respond based on this stage:
-
-${exchange <= 1 ? `STAGE: QUIZ
-- Generate ONE multiple choice question (4 options) about the student's topic.
-- The question should assess their prior knowledge or intuition.
-- Make it engaging, not test-like. Think curious conversation.
-- End with: "Which feels closest to what you think?"
-
-STRICT OUTPUT FORMAT:
-[TYPE:quiz]
-[QUESTION:your quiz question here]
-[OPTA:first option]
-[OPTB:second option]
-[OPTC:third option]
-[OPTD:fourth option]
-[TEXT:your brief intro before the quiz — 1-2 sentences, warm and curious]` :
-
-exchange <= 3 ? `STAGE: CHECKBOX / DEEPER QUESTION
-- Ask a question that requires them to select multiple relevant factors OR think deeper.
-- Provide 4-5 checkbox options where 2-3 are correct.
-- Or ask an open-ended "why do you think..." question.
-
-STRICT OUTPUT FORMAT (choose ONE):
-For checkbox:
-[TYPE:check]
-[QUESTION:your question here]
-[OPTA:option 1]
-[OPTB:option 2]
-[OPTC:option 3]
-[OPTD:option 4]
-[OPTE:option 5]
-[TEXT:brief context — 1-2 sentences]
-
-For open question:
-[TYPE:open]
-[TEXT:your thoughtful question that goes one level deeper — 2-3 sentences, ending with a clear question]` :
-
-exchange <= 5 ? `STAGE: OPEN TEXT — GO DEEPER
-- Ask a question that requires real thinking and explanation.
-- Connect to their curriculum ONLY if it's a genuine link (don't force Arduino/circuits unless they're talking about electricity).
-- Celebrate what they got right before probing deeper.
-
-STRICT OUTPUT FORMAT:
-[TYPE:open]
-[TEXT:your question — 2-4 sentences. Start by affirming something they said, then ask one deeper question.]` :
-
-exchange <= 7 ? `STAGE: REARRANGE — BUILD UNDERSTANDING
-- Give the student 4 concepts/factors related to their topic and ask them to order by importance/fundamentalness.
-- This helps them synthesize what they've learned.
-
-STRICT OUTPUT FORMAT:
-[TYPE:rearrange]
-[TEXT:brief intro — 1 sentence]
-[ITEM1:first concept]
-[ITEM2:second concept]
-[ITEM3:third concept]
-[ITEM4:fourth concept]` :
-
-`STAGE: FILL IN BLANKS — FINAL SYNTHESIS
-- Create a fill-in-the-blanks sentence or two that summarizes the key insight.
-- The student fills in the key terms, demonstrating understanding.
-- Then provide a warm synthesis.
-
-STRICT OUTPUT FORMAT:
-[TYPE:fill_blanks]
-[SENTENCE:This happens because ___ leads to ___, which ultimately affects ___.]
-[BLANK1:cause]
-[BLANK2:effect]
-[BLANK3:outcome]
-[TEXT:your synthesis — 3-4 sentences that tie everything together. Warm, validating, complete.]`}
-
-RULES:
-- NEVER mention Arduino, circuits, sensors, or programming UNLESS the student's topic is explicitly about technology/electricity.
-- Connections to curriculum must be GENUINE, not forced.
-- Always end with exactly one question (except in final synthesis).
-- Keep it conversational, warm, and slightly ancient — like a wise mentor.
-- Match the student's grade level in complexity.`;
+  return `You are Kai, a calm Socratic thinking guide. Student is ${grade} (${ctx[grade]||'student'}).
+Guide through progressive questioning. NEVER give answers directly. Be warm, conversational.
+Connect to their curriculum ONLY if genuinely relevant — NEVER force Arduino/circuits/tech unless topic is about it.
+Respond in the output format tags: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTD:], [ITEM1:]..[ITEM4:], [SENTENCE:], [BLANK1:]..[BLANK3:].
+Keep responses short. End with one question (except final synthesis).`;
 }
 
 function sendInitial() {
@@ -1122,10 +1020,20 @@ function sendInitial() {
 
 async function callAI() {
   try {
+    // Truncate history to last 6 messages to save tokens
+    var trimmedHistory = history.slice(-6);
+
+    // Build stage instruction as a user message (not in system prompt)
+    var stageInstr = buildStageInstruction();
+
     var body = {
       model: 'deepseek-chat',
-      messages: [{ role: 'system', content: buildSystemPrompt() }, ...history],
-      max_tokens: 600,
+      messages: [
+        { role: 'system', content: buildSystemPrompt() },
+        ...trimmedHistory,
+        { role: 'user', content: stageInstr }
+      ],
+      max_tokens: 300,
       temperature: 0.7
     };
 
@@ -1146,6 +1054,15 @@ async function callAI() {
   } catch (e) {
     throw e;
   }
+}
+
+function buildStageInstruction() {
+  var ex = exchangeCount;
+  if (ex <= 1) return '[SYSTEM INSTRUCTION] You are on exchange 1-2 (QUIZ stage). Generate exactly ONE multiple choice question with 4 options about the topic. Output format: [TYPE:quiz][QUESTION:...][OPTA:...][OPTB:...][OPTC:...][OPTD:...][TEXT:1-2 sentence intro]. End with "Which feels closest to what you think?"';
+  if (ex <= 3) return '[SYSTEM INSTRUCTION] You are on exchange 3-4 (CHECKBOX stage). Ask them to select multiple relevant factors. Output: [TYPE:check][QUESTION:...][OPTA:...][OPTB:...][OPTC:...][OPTD:...][OPTE:...][TEXT:1-2 sentence context]. Or use [TYPE:open] for a deeper question.';
+  if (ex <= 5) return '[SYSTEM INSTRUCTION] You are on exchange 5-6 (OPEN stage). Ask one deeper question. Affirm what they got right first. Output: [TYPE:open][TEXT:2-4 sentences ending with a clear question].';
+  if (ex <= 7) return '[SYSTEM INSTRUCTION] You are on exchange 7-8 (REARRANGE stage). Give 4 concepts related to their topic. Output: [TYPE:rearrange][TEXT:1 sentence intro][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...].';
+  return '[SYSTEM INSTRUCTION] FINAL SYNTHESIS stage. Create a fill-in-blanks sentence summarizing the key insight, then give a warm synthesis. Output: [TYPE:fill_blanks][SENTENCE:...][BLANK1:...][BLANK2:...][BLANK3:...][TEXT:3-4 sentence synthesis].';
 }
 
 // ═══════════════════════════════════════════
