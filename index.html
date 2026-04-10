@@ -1036,7 +1036,7 @@ async function callAI() {
     var stageInstr = buildStageInstruction();
 
     var body = {
-      model: IS_LOCAL ? 'qwen2.5:7b' : 'deepseek-chat',
+      model: IS_LOCAL ? 'qwen2.5:7b' : 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: buildSystemPrompt() },
         ...trimmedHistory,
