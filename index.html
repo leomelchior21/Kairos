@@ -535,7 +535,11 @@ textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
-const API_URL = '/api/chat';
+// Auto-detect: localhost = local LM Studio, else = Vercel proxy
+var IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_URL = IS_LOCAL
+  ? 'http://localhost:1234/v1/chat/completions'
+  : '/api/chat';
 
 // ═══════════════════════════════════════════
 // STATE
@@ -1020,6 +1024,8 @@ function sendInitial() {
 
 async function callAI() {
   try {
+    console.log('[Kairos] Calling API:', API_URL, IS_LOCAL ? '(local)' : '(vercel)');
+
     // Truncate history to last 6 messages to save tokens
     var trimmedHistory = history.slice(-6);
 
@@ -1027,7 +1033,7 @@ async function callAI() {
     var stageInstr = buildStageInstruction();
 
     var body = {
-      model: 'deepseek-chat',
+      model: IS_LOCAL ? 'qwen2.5:7b' : 'deepseek-chat',
       messages: [
         { role: 'system', content: buildSystemPrompt() },
         ...trimmedHistory,
@@ -1037,21 +1043,28 @@ async function callAI() {
       temperature: 0.7
     };
 
+    console.log('[Kairos] Request body:', JSON.stringify(body).substring(0, 200) + '...');
+
     var r = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
 
+    console.log('[Kairos] Response status:', r.status);
+
     if (!r.ok) {
       var err = await r.json().catch(function() { return { error: { message: 'API error ' + r.status } }; });
+      console.error('[Kairos] API error:', err);
       throw new Error(err.error ? err.error.message : 'API error ' + r.status);
     }
 
     var d = await r.json();
+    console.log('[Kairos] Response received, tokens:', d.usage ? d.usage.total_tokens : 'unknown');
     var raw = d.choices[0].message.content;
     return raw;
   } catch (e) {
+    console.error('[Kairos] callAI error:', e);
     throw e;
   }
 }
