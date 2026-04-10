@@ -10,13 +10,12 @@
 
 :root {
   --bg:       #060b08;
-  --bg-elev:  #0a120e;
   --card:     rgba(255,255,255,0.03);
   --card-h:   rgba(255,255,255,0.06);
   --rim:      rgba(255,255,255,0.07);
   --rim-h:    rgba(255,255,255,0.14);
   --green:    #1adf80;
-  --green-g:  #22f090;
+  --green-dim:rgba(26,223,128,0.15);
   --mint:     #b8f0d4;
   --forest:   #0f8a50;
   --deep:     #083d22;
@@ -28,7 +27,7 @@
 html, body { height: 100%; background: var(--bg); color: var(--txt); font-family: 'Inter', sans-serif; overflow: hidden; }
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(ellipse 120% 100% at 50% 50%, transparent 35%, rgba(0,0,0,0.65) 100%);
+  background: radial-gradient(ellipse 120% 100% at 50% 50%, transparent 35%, rgba(0,0,0,0.6) 100%);
 }
 
 /* ═══ SCREENS ═══ */
@@ -180,22 +179,24 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
   text-transform: uppercase; color: var(--txt-dim); white-space: nowrap;
 }
 
-/* ═══ CHAT SCREEN ═══ */
-#screen-chat { background: var(--bg); }
-#screen-chat::after {
+/* ═══════════════════════════════════════════ */
+/* ═══ MAIN CHAT / MIND MAP UI               */
+/* ═══════════════════════════════════════════ */
+#screen-main { background: var(--bg); }
+#screen-main::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 100% 40% at 50% 0%, rgba(26,223,128,0.04) 0%, transparent 55%);
+  background: radial-gradient(ellipse 100% 35% at 50% 0%, rgba(26,223,128,0.04) 0%, transparent 50%);
 }
 
 /* Header */
-.chat-hdr {
+.main-hdr {
   position: relative; z-index: 10; display: flex; align-items: center; gap: 14px;
-  padding: 16px 24px; border-bottom: 1px solid var(--rim);
+  padding: 14px 22px; border-bottom: 1px solid var(--rim);
   background: rgba(6,11,8,0.85); backdrop-filter: blur(40px); flex-shrink: 0;
 }
 
 .hdr-orb {
-  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   background: radial-gradient(circle at 35% 30%, var(--mint), var(--green) 45%, var(--deep));
   box-shadow: 0 0 16px rgba(26,223,128,0.25); animation: hdrOrb 3s ease-in-out infinite;
 }
@@ -205,94 +206,234 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
 }
 
 .hdr-names { flex: 1; }
-.hdr-name { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--txt); letter-spacing: -0.01em; }
-.hdr-sub { font-size: 9px; font-weight: 600; color: var(--txt-dim); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 1px; }
+.hdr-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--txt); }
+.hdr-sub { font-size: 8px; font-weight: 600; color: var(--txt-dim); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 1px; }
 
 .grade-pill {
   background: rgba(26,223,128,0.08); border: 1px solid rgba(26,223,128,0.2);
-  color: var(--green); font-size: 10px; font-weight: 700; padding: 5px 13px;
+  color: var(--green); font-size: 10px; font-weight: 700; padding: 4px 12px;
   border-radius: 20px; letter-spacing: 0.06em;
 }
 
-/* Connections bar */
-.conns-wrap {
-  flex-shrink: 0; border-bottom: 1px solid var(--rim);
-  background: rgba(6,11,8,0.7); backdrop-filter: blur(24px);
-  position: relative; z-index: 10;
-  transition: opacity 0.4s, transform 0.4s, max-height 0.4s;
-  overflow: hidden; max-height: 60px;
+/* Progress bar */
+.progress-wrap {
+  position: relative; z-index: 10; flex-shrink: 0;
+  padding: 8px 22px 6px; border-bottom: 1px solid var(--rim);
+  background: rgba(6,11,8,0.6);
 }
-.conns-wrap.hidden-bar { opacity: 0; transform: translateY(-8px); max-height: 0; pointer-events: none; }
-
-.conns-inner {
-  display: flex; gap: 6px; overflow-x: auto; padding: 10px 24px;
-  scrollbar-width: none; align-items: center;
-}
-.conns-inner::-webkit-scrollbar { display: none; }
-
-.conns-lbl {
-  font-size: 8px; font-weight: 700; letter-spacing: 0.24em;
-  text-transform: uppercase; color: var(--txt-dim); white-space: nowrap; flex-shrink: 0; margin-right: 4px;
+.progress-bar { display: flex; gap: 3px; }
+.progress-seg { flex: 1; height: 3px; border-radius: 2px; background: var(--rim); transition: all 0.6s; }
+.progress-seg.filled { background: var(--green); box-shadow: 0 0 6px rgba(26,223,128,0.3); }
+.progress-label {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--txt-dim); margin-top: 4px; text-align: center;
 }
 
-.conn-chip {
-  flex-shrink: 0; background: rgba(26,223,128,0.05); border: 1px solid rgba(26,223,128,0.14);
-  border-radius: 20px; padding: 5px 13px; display: flex; align-items: center; gap: 6px;
-  animation: chipIn 0.4s cubic-bezier(0.16,1,0.3,1); backdrop-filter: blur(8px);
-  cursor: default; transition: all 0.2s;
-}
-.conn-chip:hover { background: rgba(26,223,128,0.1); border-color: rgba(26,223,128,0.3); }
-@keyframes chipIn { from { opacity: 0; transform: scale(0.88) translateX(8px); } to { opacity: 1; transform: scale(1) translateX(0); } }
-
-.cdot {
-  width: 4px; height: 4px; border-radius: 50%; background: var(--green); flex-shrink: 0;
-  box-shadow: 0 0 6px var(--green);
-}
-.ctag { font-size: 9px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.1em; }
-.ctxt { font-size: 11px; font-weight: 400; color: var(--txt-mid); }
-
-/* Chat messages */
-#chat {
-  flex: 1; overflow-y: auto; padding: 28px 24px 16px;
-  display: flex; flex-direction: column; gap: 28px;
-  scrollbar-width: thin; scrollbar-color: var(--rim) transparent;
+/* ═══ MIND MAP / BENTO AREA ═══ */
+.mindmap-scroll {
+  flex: 1; overflow-x: auto; overflow-y: hidden;
   position: relative; z-index: 1;
+  scrollbar-width: none;
 }
-#chat::-webkit-scrollbar { width: 3px; }
-#chat::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 2px; }
+.mindmap-scroll::-webkit-scrollbar { display: none; }
 
-.msg { max-width: 620px; animation: msgIn 0.5s cubic-bezier(0.16,1,0.3,1); }
-.msg.km { align-self: flex-start; }
-.msg.um { align-self: flex-end; }
-@keyframes msgIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
-.mwho {
-  font-size: 8px; font-weight: 700; letter-spacing: 0.24em;
-  text-transform: uppercase; margin-bottom: 8px; color: var(--txt-dim);
+.mindmap-track {
+  display: flex; gap: 0; padding: 24px 22px 24px 22px;
+  min-height: 100%; align-items: flex-start;
 }
-.msg.km .mwho { color: var(--green); text-shadow: 0 0 8px rgba(26,223,128,0.3); }
 
-.mbody { font-size: 15.5px; line-height: 1.85; color: var(--txt-mid); }
+/* Connection line between boxes */
+.conn-line {
+  width: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.conn-line::before {
+  content: ''; width: 100%; height: 1px;
+  background: linear-gradient(90deg, var(--green-dim), rgba(26,223,128,0.25));
+}
+.conn-line .arrow {
+  position: absolute; right: -2px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 5px solid var(--green);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
 
-.msg.um .mbody {
-  background: var(--card-h); border: 1px solid var(--rim);
-  border-radius: 18px 18px 4px 18px; padding: 14px 18px;
-  color: var(--txt); font-weight: 400; display: inline-block;
+/* Bento Box */
+.bento-box {
+  flex-shrink: 0; width: min(340px, 80vw);
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: 16px; padding: 20px;
   backdrop-filter: blur(16px);
+  animation: boxIn 0.5s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
 }
+.bento-box.kai-box {
+  border-left: 2px solid var(--green);
+}
+.bento-box.user-box {
+  background: var(--card-h);
+}
+@keyframes boxIn { from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-.msg.km .mbody {
+.box-label {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.24em;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.bento-box.kai-box .box-label { color: var(--green); }
+.bento-box.user-box .box-label { color: var(--txt-dim); }
+
+.box-content {
+  font-size: 14.5px; line-height: 1.75; color: var(--txt-mid);
+}
+.bento-box.kai-box .box-content {
   font-family: 'Cormorant Garamond', serif; font-style: italic;
-  font-size: 18px; color: var(--txt); font-weight: 400; line-height: 1.75;
+  font-size: 17px; color: var(--txt); line-height: 1.7;
 }
 
-.msg.km.fin .mbody {
-  font-style: normal; font-family: 'Inter', sans-serif; font-weight: 300; font-size: 15px;
-  border-left: 2px solid var(--green); padding-left: 18px; color: var(--txt);
+/* Quiz options inside bento box */
+.quiz-options { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.quiz-opt {
+  background: rgba(26,223,128,0.04); border: 1px solid rgba(26,223,128,0.12);
+  border-radius: 12px; padding: 11px 15px; cursor: pointer;
+  font-size: 13px; font-weight: 400; color: var(--txt-mid);
+  transition: all 0.2s cubic-bezier(0.34,1.4,0.64,1);
+  display: flex; align-items: center; gap: 10px;
+}
+.quiz-opt:hover { background: rgba(26,223,128,0.1); border-color: rgba(26,223,128,0.3); color: var(--txt); transform: translateX(4px); }
+.quiz-opt.selected { background: rgba(26,223,128,0.14); border-color: var(--green); color: var(--green); }
+.quiz-opt .opt-letter {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  background: var(--rim); display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--txt-dim); transition: all 0.2s;
+}
+.quiz-opt.selected .opt-letter { background: var(--green); color: #060b08; }
+.quiz-opt .opt-text { flex: 1; }
+
+/* Checkbox options */
+.check-options { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.check-opt {
+  background: rgba(26,223,128,0.04); border: 1px solid rgba(26,223,128,0.12);
+  border-radius: 12px; padding: 10px 15px; cursor: pointer;
+  font-size: 13px; font-weight: 400; color: var(--txt-mid);
+  transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+}
+.check-opt:hover { background: rgba(26,223,128,0.08); }
+.check-opt.selected { background: rgba(26,223,128,0.12); border-color: var(--green); color: var(--green); }
+.check-box {
+  width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0;
+  border: 1.5px solid var(--rim-h); transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.check-opt.selected .check-box { border-color: var(--green); background: var(--green); }
+.check-opt.selected .check-box::after {
+  content: '✓'; font-size: 11px; color: #060b08; font-weight: 700;
 }
 
-/* Thinking indicator */
-.tdots { display: flex; gap: 6px; align-items: center; padding: 4px 0; }
+/* Dropdown */
+.dropdown-wrap { margin-top: 12px; }
+.dropdown-sel {
+  width: 100%; background: rgba(26,223,128,0.04); border: 1px solid rgba(26,223,128,0.14);
+  border-radius: 12px; padding: 12px 15px; color: var(--txt-mid);
+  font-family: 'Inter', sans-serif; font-size: 13px; cursor: pointer;
+  appearance: none; outline: none; transition: all 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231adf80' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.dropdown-sel:focus { border-color: rgba(26,223,128,0.4); }
+.dropdown-sel option { background: #0a120e; color: var(--txt); }
+
+/* Rearrange */
+.rearrange-items { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.rearrange-item {
+  background: rgba(26,223,128,0.04); border: 1px solid rgba(26,223,128,0.12);
+  border-radius: 12px; padding: 10px 15px; cursor: pointer;
+  font-size: 13px; font-weight: 400; color: var(--txt-mid);
+  transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+  user-select: none;
+}
+.rearrange-item:hover { background: rgba(26,223,128,0.08); }
+.rearrange-item.placed { background: rgba(26,223,128,0.12); border-color: var(--green); color: var(--green); }
+.rearrange-num {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  background: var(--rim); display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--txt-dim); transition: all 0.2s;
+}
+.rearrange-item.placed .rearrange-num { background: var(--green); color: #060b08; }
+
+/* Fill in blanks */
+.fill-sentence { margin-top: 12px; font-size: 15px; line-height: 2; color: var(--txt-mid); }
+.fill-blank {
+  display: inline-block; min-width: 80px; border-bottom: 2px solid var(--green);
+  padding: 2px 6px; margin: 0 4px; text-align: center;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--green); background: transparent; border-top: none;
+  border-left: none; border-right: none; outline: none;
+  caret-color: var(--green);
+}
+.fill-blank::placeholder { color: var(--txt-dim); font-weight: 400; }
+
+/* Submit button inside box */
+.box-submit {
+  margin-top: 14px; background: linear-gradient(135deg, var(--green), var(--forest));
+  color: #060b08; border: none; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+  padding: 9px 22px; cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all 0.2s; box-shadow: 0 2px 12px rgba(26,223,128,0.3);
+}
+.box-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(26,223,128,0.45); }
+.box-submit:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+/* ═══ INPUT AREA ═══ */
+.inp-area {
+  flex-shrink: 0; border-top: 1px solid var(--rim); padding: 14px 22px 20px;
+  background: rgba(6,11,8,0.88); backdrop-filter: blur(40px);
+  position: relative; z-index: 10;
+}
+
+.stage-indicator {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.stage-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0;
+  box-shadow: 0 0 6px var(--green); animation: sp 3s ease-in-out infinite;
+}
+@keyframes sp { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
+.stage-text {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--txt-dim); flex: 1;
+}
+
+.inp-row { display: flex; gap: 10px; align-items: flex-end; }
+
+textarea.inp-text {
+  flex: 1; background: var(--card); border: 1px solid var(--rim); border-radius: 14px;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 300; color: var(--txt);
+  padding: 13px 17px; resize: none; outline: none; min-height: 46px; max-height: 100px;
+  line-height: 1.5; caret-color: var(--green); backdrop-filter: blur(16px);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+textarea.inp-text::placeholder { color: var(--txt-dim); font-style: italic; }
+textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px rgba(26,223,128,0.06); }
+
+.send-btn {
+  width: 46px; height: 46px; background: linear-gradient(135deg, var(--green), var(--forest));
+  border: none; border-radius: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(26,223,128,0.3);
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.send-btn:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(26,223,128,0.45); }
+.send-btn:active { transform: scale(0.92); }
+.send-btn svg { width: 17px; height: 17px; fill: #060b08; }
+
+/* Typing indicator */
+.typing-box {
+  flex-shrink: 0; width: min(340px, 80vw);
+  background: var(--card); border: 1px solid var(--rim); border-left: 2px solid var(--green);
+  border-radius: 16px; padding: 20px;
+}
+.tdots { display: flex; gap: 6px; align-items: center; }
 .tdots span {
   width: 5px; height: 5px; border-radius: 50%; background: var(--green); opacity: 0.25;
   animation: td 1.4s ease-in-out infinite; box-shadow: 0 0 6px var(--green);
@@ -304,109 +445,15 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
   40% { opacity: 1; transform: scale(1.15); }
 }
 
-/* Input area */
-.inp-area {
-  flex-shrink: 0; border-top: 1px solid var(--rim); padding: 16px 24px 24px;
-  background: rgba(6,11,8,0.88); backdrop-filter: blur(40px);
-  box-shadow: 0 -1px 0 rgba(26,223,128,0.04); position: relative; z-index: 10;
+/* Synthesis box */
+.bento-box.synthesis {
+  border-left: 2px solid var(--green);
+  background: rgba(26,223,128,0.04);
 }
+.bento-box.synthesis .box-label { color: var(--green); }
 
-.stage-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
-.stage-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0;
-  box-shadow: 0 0 8px var(--green); animation: sp 3s ease-in-out infinite;
-}
-@keyframes sp { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 1; transform: scale(1.5); } }
-.stage-name {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
-  text-transform: uppercase; color: var(--txt-dim); flex: 1;
-}
-
-.stage-pills { display: flex; gap: 4px; }
-.stage-pill { width: 6px; height: 6px; border-radius: 50%; background: var(--rim-h); transition: all 0.3s; }
-.stage-pill.active { background: var(--green); box-shadow: 0 0 8px var(--green); }
-
-.depth-bar { display: flex; gap: 2px; margin-bottom: 14px; }
-.depth-seg { flex: 1; height: 2px; border-radius: 1px; background: var(--rim); transition: background 0.5s; }
-.depth-seg.filled { background: var(--green); box-shadow: 0 0 6px rgba(26,223,128,0.3); }
-
-.frow { display: flex; gap: 10px; align-items: flex-end; animation: fu 0.3s ease; }
-@keyframes fu { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-textarea.cta {
-  flex: 1; background: var(--card); border: 1px solid var(--rim); border-radius: 14px;
-  font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 300; color: var(--txt);
-  padding: 14px 18px; resize: none; outline: none; min-height: 50px; max-height: 120px; line-height: 1.55;
-  caret-color: var(--green); backdrop-filter: blur(16px);
-  transition: border-color 0.25s, box-shadow 0.25s;
-}
-textarea.cta::placeholder { color: var(--txt-dim); font-style: italic; }
-textarea.cta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px rgba(26,223,128,0.06); }
-
-.sbtn {
-  width: 48px; height: 48px;
-  background: linear-gradient(135deg, var(--green), var(--forest));
-  border: none; border-radius: 13px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  box-shadow: 0 4px 20px rgba(26,223,128,0.3), 0 0 40px rgba(26,223,128,0.08);
-  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-}
-.sbtn:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(26,223,128,0.45), 0 0 60px rgba(26,223,128,0.15); }
-.sbtn:active { transform: scale(0.92); }
-.sbtn svg { width: 18px; height: 18px; fill: #060b08; }
-
-/* Topic chips */
-.chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; animation: fu 0.3s ease; }
-.tchip {
-  background: rgba(26,223,128,0.04); border: 1px solid rgba(26,223,128,0.14);
-  color: var(--txt-mid); font-size: 11px; font-weight: 500; padding: 7px 15px;
-  border-radius: 20px; cursor: pointer; letter-spacing: 0.02em; backdrop-filter: blur(8px);
-  transition: all 0.2s cubic-bezier(0.34,1.4,0.64,1);
-}
-.tchip:hover {
-  background: rgba(26,223,128,0.1); border-color: rgba(26,223,128,0.38);
-  color: var(--txt); transform: translateY(-2px);
-}
-
-/* Open question */
-.open-q-wrap { margin-bottom: 12px; animation: fu 0.3s ease; }
-.open-q {
-  background: rgba(26,223,128,0.04); border: 1px solid rgba(26,223,128,0.12);
-  border-left: 2px solid var(--green); border-radius: 12px; padding: 12px 16px;
-  font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 16px;
-  color: var(--txt-mid); line-height: 1.6; cursor: pointer; transition: all 0.2s;
-}
-.open-q:hover { background: rgba(26,223,128,0.08); border-color: rgba(26,223,128,0.25); color: var(--txt); }
-
-/* Rank UI */
-.rank-wrap { animation: fu 0.3s ease; }
-.rank-lbl {
-  font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic;
-  color: var(--txt-dim); margin-bottom: 10px;
-}
-.rank-items { display: flex; flex-wrap: wrap; gap: 6px; }
-.ri {
-  background: rgba(26,223,128,0.04); border: 1px solid rgba(26,223,128,0.14);
-  color: var(--txt-mid); font-size: 11px; font-weight: 500; padding: 8px 15px;
-  border-radius: 12px; cursor: pointer; backdrop-filter: blur(8px);
-  transition: all 0.2s cubic-bezier(0.34,1.4,0.64,1); user-select: none;
-}
-.ri:hover { background: rgba(26,223,128,0.08); transform: translateY(-1px); }
-.ri.sel {
-  border-color: var(--green); color: var(--green); background: rgba(26,223,128,0.1);
-  box-shadow: 0 0 16px rgba(26,223,128,0.15);
-}
-.rsub {
-  background: rgba(26,223,128,0.06); border: 1px solid rgba(26,223,128,0.25);
-  color: var(--green); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 22px;
-  border-radius: 12px; cursor: pointer; margin-top: 12px; display: inline-block;
-  transition: all 0.2s cubic-bezier(0.34,1.4,0.64,1);
-}
-.rsub:hover {
-  background: var(--green); color: #060b08; transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(26,223,128,0.35);
-}
+/* Utility */
+.esc { }
 </style>
 </head>
 <body>
@@ -420,10 +467,10 @@ textarea.cta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
     <div class="landing-sub">a thinking partner for curious minds</div>
     <div class="landing-box">
       <div class="landing-input-wrap">
-        <textarea class="lta" id="landing-input" placeholder="What's on your mind?" rows="1"
+        <textarea class="lta" id="landing-input" placeholder="What would you like to explore?" rows="1"
           onkeydown="handleLandingKey(event)" oninput="autoResize(this)"></textarea>
       </div>
-      <button class="ask-btn" onclick="goToGrade()">Ask Kai</button>
+      <button class="ask-btn" onclick="goToGrade()">Begin</button>
     </div>
   </div>
 </div>
@@ -440,27 +487,27 @@ textarea.cta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
     </div>
     <div class="grade-q">Hey, I'm <em>Kai</em>.<br>What grade are you in?</div>
     <div class="grade-section">
-      <div class="grade-section-label">Ensino Fundamental</div>
+      <div class="grade-section-label">Middle School</div>
       <div class="grade-grid">
-        <button class="g-btn" onclick="selectGrade('5º ano')"><span class="gn">5</span><span class="gl">ano</span></button>
-        <button class="g-btn" onclick="selectGrade('6º ano')"><span class="gn">6</span><span class="gl">ano</span></button>
-        <button class="g-btn" onclick="selectGrade('7º ano')"><span class="gn">7</span><span class="gl">ano</span></button>
-        <button class="g-btn" onclick="selectGrade('8º ano')"><span class="gn">8</span><span class="gl">ano</span></button>
-        <button class="g-btn" onclick="selectGrade('9º ano')"><span class="gn">9</span><span class="gl">ano</span></button>
+        <button class="g-btn" onclick="selectGrade('5th grade')"><span class="gn">5</span><span class="gl">grade</span></button>
+        <button class="g-btn" onclick="selectGrade('6th grade')"><span class="gn">6</span><span class="gl">grade</span></button>
+        <button class="g-btn" onclick="selectGrade('7th grade')"><span class="gn">7</span><span class="gl">grade</span></button>
+        <button class="g-btn" onclick="selectGrade('8th grade')"><span class="gn">8</span><span class="gl">grade</span></button>
+        <button class="g-btn" onclick="selectGrade('9th grade')"><span class="gn">9</span><span class="gl">grade</span></button>
       </div>
-      <div class="divider"><span>Ensino Médio</span></div>
+      <div class="divider"><span>High School</span></div>
       <div class="grade-grid-3">
-        <button class="g-btn" onclick="selectGrade('1ª série')"><span class="gn">1ª</span><span class="gl">série</span></button>
-        <button class="g-btn" onclick="selectGrade('2ª série')"><span class="gn">2ª</span><span class="gl">série</span></button>
-        <button class="g-btn" onclick="selectGrade('3ª série')"><span class="gn">3ª</span><span class="gl">série</span></button>
+        <button class="g-btn" onclick="selectGrade('1st year HS')"><span class="gn">1st</span><span class="gl">year</span></button>
+        <button class="g-btn" onclick="selectGrade('2nd year HS')"><span class="gn">2nd</span><span class="gl">year</span></button>
+        <button class="g-btn" onclick="selectGrade('3rd year HS')"><span class="gn">3rd</span><span class="gl">year</span></button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ CHAT ═══ -->
-<div id="screen-chat" class="screen hidden">
-  <div class="chat-hdr">
+<!-- ═══ MAIN MIND MAP UI ═══ -->
+<div id="screen-main" class="screen hidden">
+  <div class="main-hdr">
     <div class="hdr-orb"></div>
     <div class="hdr-names">
       <div class="hdr-name">Kai</div>
@@ -468,19 +515,18 @@ textarea.cta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
     </div>
     <div class="grade-pill" id="grade-pill"></div>
   </div>
-  <div class="conns-wrap hidden-bar" id="conns-wrap">
-    <div class="conns-inner" id="conns-inner">
-      <span class="conns-lbl">connections</span>
-    </div>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+    <div class="progress-label" id="progress-label">exploring</div>
   </div>
-  <div id="chat"><div id="anchor"></div></div>
+  <div class="mindmap-scroll" id="mindmap-scroll">
+    <div class="mindmap-track" id="mindmap-track"></div>
+  </div>
   <div class="inp-area">
-    <div class="stage-bar">
+    <div class="stage-indicator">
       <div class="stage-dot"></div>
-      <span class="stage-name" id="stage-name">explore</span>
-      <div class="stage-pills" id="stage-pills"></div>
+      <span class="stage-text" id="stage-text">what do you already know?</span>
     </div>
-    <div class="depth-bar" id="depth-bar"></div>
     <div id="input-zone"></div>
   </div>
 </div>
@@ -489,35 +535,35 @@ textarea.cta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
-const DEEPSEEK_KEY = ''; // ← paste your key here
+const API_URL = '/api/chat';
 
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
-let grade = '', firstQ = '', depthStage = 0, depth = 0;
-let connections = [], history = [], busy = false, lastOpenQ = '';
+let grade = '', firstQ = '', exchangeCount = 0, busy = false;
+let history = [], pendingInput = null; // { type, ...data }
 
 const STAGES = [
-  { name: 'explore',     desc: 'share what you know' },
-  { name: 'connect',     desc: 'find patterns' },
-  { name: 'question',    desc: 'go deeper' },
-  { name: 'rearrange',   desc: 'synthesize' },
-  { name: 'unlock',      desc: 'your answer awaits' }
+  { name: 'explore',     label: 'exploring your thoughts',      exchanges: 0 },
+  { name: 'connect',     label: 'finding patterns',              exchanges: 2 },
+  { name: 'question',    label: 'going deeper',                  exchanges: 4 },
+  { name: 'rearrange',   label: 'building understanding',        exchanges: 6 },
+  { name: 'unlock',      label: 'your answer awaits',            exchanges: 8 }
 ];
 
-const CHIPS = {
-  '5º ano':  ['planeta Terra','seres vivos','energia','cidades','água','animais'],
-  '6º ano':  ['ecossistemas','matéria','movimentos','sociedades','clima'],
-  '7º ano':  ['SDGs','cidades sustentáveis','energia limpa','desigualdade','clima','ONU'],
-  '8º ano':  ['física','química','corpo humano','história','tecnologia'],
-  '9º ano':  ['Arduino','circuitos','Tinkercad','lógica','sensores','programação'],
-  '1ª série':['física','química','biologia','matemática','história'],
-  '2ª série':['termodinâmica','genética','filosofia','estatística','literatura'],
-  '3ª série':['vestibular','redação','cálculo','bioquímica','ética'],
+const CURRICULUM = {
+  '5th grade':  ['earth science','living things','energy','water cycle','communities','simple machines'],
+  '6th grade':  ['ecosystems','matter','ancient civilizations','climate','gravity','cells'],
+  '7th grade':  ['sustainability','climate change','inequality','UN goals','renewable energy','urbanization'],
+  '8th grade':  ['physics','chemistry','human body','modern history','technology','forces'],
+  '9th grade':  ['electricity','circuits','programming','sensors','logic gates','automation'],
+  '1st year HS':['mechanics','atomic structure','genetics','algebra','world history'],
+  '2nd year HS':['thermodynamics','genetics','philosophy','statistics','literature'],
+  '3rd year HS':['college prep','essays','calculus','biochemistry','ethics'],
 };
 
 // ═══════════════════════════════════════════
-// BLOB CANVAS — 3 layered morphing blobs
+// BLOB CANVAS
 // ═══════════════════════════════════════════
 (function () {
   const canvas = document.getElementById('kai-canvas');
@@ -530,13 +576,10 @@ const CHIPS = {
   window.addEventListener('resize', resize);
 
   const blobs = [
-    // Blob 1 — mint, large, slowest, center
     { ox: 0.50, oy: 0.46, r: 0.50, sx: 0.08, sy: 0.07, ph: 0.0,
       c0: [190,255,165], c1: [26,223,128], c2: [0,130,70], c3: [0,45,22] },
-    // Blob 2 — forest, medium, medium speed, offset left
     { ox: 0.38, oy: 0.55, r: 0.36, sx: 0.11, sy: 0.10, ph: 2.0,
       c0: [26,223,128], c1: [0,110,55], c2: [0,65,30], c3: [0,18,8] },
-    // Blob 3 — deep green, smaller, faster, offset right
     { ox: 0.62, oy: 0.40, r: 0.28, sx: 0.13, sy: 0.09, ph: 4.0,
       c0: [170,255,170], c1: [20,190,95], c2: [0,90,45], c3: [0,28,14] },
   ];
@@ -544,10 +587,7 @@ const CHIPS = {
   function draw() {
     t += 0.0035;
     ctx.clearRect(0, 0, W, H);
-
-    // Base background
-    ctx.fillStyle = '#060b08';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#060b08'; ctx.fillRect(0, 0, W, H);
 
     blobs.forEach(b => {
       const cx = W * (b.ox + Math.sin(t * 0.55 + b.ph) * b.sx);
@@ -555,22 +595,15 @@ const CHIPS = {
       const rx = W * (b.r + Math.sin(t + b.ph) * 0.022);
       const ry = H * (b.r * 0.82 + Math.cos(t * 1.05 + b.ph) * 0.020);
 
-      const g = ctx.createRadialGradient(
-        cx - rx * 0.12, cy - ry * 0.18, 0, cx, cy, Math.max(rx, ry)
-      );
-      g.addColorStop(0,   `rgba(${b.c0},0.88)`);
-      g.addColorStop(0.22,`rgba(${b.c1},0.65)`);
-      g.addColorStop(0.55,`rgba(${b.c2},0.30)`);
-      g.addColorStop(1,   `rgba(${b.c3},0)`);
+      const g = ctx.createRadialGradient(cx - rx * 0.12, cy - ry * 0.18, 0, cx, cy, Math.max(rx, ry));
+      g.addColorStop(0,    'rgba(' + b.c0 + ',0.88)');
+      g.addColorStop(0.22, 'rgba(' + b.c1 + ',0.65)');
+      g.addColorStop(0.55, 'rgba(' + b.c2 + ',0.30)');
+      g.addColorStop(1,    'rgba(' + b.c3 + ',0)');
 
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(1, ry / rx);
-      ctx.beginPath();
-      ctx.arc(0, 0, rx, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
-      ctx.restore();
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(1, ry / rx);
+      ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2);
+      ctx.fillStyle = g; ctx.fill(); ctx.restore();
     });
 
     requestAnimationFrame(draw);
@@ -579,24 +612,19 @@ const CHIPS = {
 })();
 
 // ═══════════════════════════════════════════
-// SCREEN TRANSITIONS
+// SCREENS
 // ═══════════════════════════════════════════
 function transitionOut(el) {
-  return new Promise(r => {
-    el.style.opacity = '0';
-    el.style.transform = 'scale(0.96)';
-    el.style.filter = 'blur(4px)';
+  return new Promise(function(r) {
+    el.style.opacity = '0'; el.style.transform = 'scale(0.96)'; el.style.filter = 'blur(4px)';
     setTimeout(r, 850);
   });
 }
 function transitionIn(el) {
-  return new Promise(r => {
+  return new Promise(function(r) {
     el.classList.remove('hidden');
-    // Force reflow
     void el.offsetHeight;
-    el.style.opacity = '1';
-    el.style.transform = 'scale(1)';
-    el.style.filter = 'none';
+    el.style.opacity = '1'; el.style.transform = 'scale(1)'; el.style.filter = 'none';
     setTimeout(r, 100);
   });
 }
@@ -604,15 +632,13 @@ function transitionIn(el) {
 // ═══════════════════════════════════════════
 // LANDING
 // ═══════════════════════════════════════════
-function handleLandingKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); goToGrade(); }
-}
+function handleLandingKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); goToGrade(); } }
 
 async function goToGrade() {
-  const q = document.getElementById('landing-input').value.trim();
+  var q = document.getElementById('landing-input').value.trim();
   if (!q) {
     document.getElementById('landing-input').style.borderColor = 'rgba(255,80,80,0.4)';
-    setTimeout(() => { document.getElementById('landing-input').style.borderColor = ''; }, 1200);
+    setTimeout(function() { document.getElementById('landing-input').style.borderColor = ''; }, 1200);
     return;
   }
   firstQ = q;
@@ -626,352 +652,614 @@ async function goToGrade() {
 // ═══════════════════════════════════════════
 async function selectGrade(g) {
   grade = g;
-  document.getElementById('grade-pill').textContent = grade;
+  document.getElementById('grade-pill').textContent = g;
   await transitionOut(document.getElementById('screen-grade'));
   document.getElementById('screen-grade').classList.add('hidden');
-  document.getElementById('screen-chat').classList.remove('hidden');
-  void document.getElementById('screen-chat').offsetHeight;
-  document.getElementById('screen-chat').style.opacity = '1';
-  document.getElementById('screen-chat').style.transform = 'scale(1)';
-  document.getElementById('screen-chat').style.filter = 'none';
-  initChat();
-  sendMsg(firstQ);
+  document.getElementById('screen-main').classList.remove('hidden');
+  void document.getElementById('screen-main').offsetHeight;
+  document.getElementById('screen-main').style.opacity = '1';
+  document.getElementById('screen-main').style.transform = 'scale(1)';
+  document.getElementById('screen-main').style.filter = 'none';
+  buildProgressBar();
+  sendInitial();
 }
 
 // ═══════════════════════════════════════════
-// CHAT INIT
+// PROGRESS BAR
 // ═══════════════════════════════════════════
-function initChat() {
-  buildDepthBar();
-  buildStagePills();
-  renderZone();
-}
-
-function buildDepthBar() {
-  const bar = document.getElementById('depth-bar');
+function buildProgressBar() {
+  var bar = document.getElementById('progress-bar');
   bar.innerHTML = '';
-  for (let i = 0; i < 20; i++) {
-    const seg = document.createElement('div');
-    seg.className = 'depth-seg';
+  for (var i = 0; i < 20; i++) {
+    var seg = document.createElement('div');
+    seg.className = 'progress-seg';
     bar.appendChild(seg);
   }
 }
 
-function buildStagePills() {
-  const pills = document.getElementById('stage-pills');
-  pills.innerHTML = '';
-  STAGES.forEach((_, i) => {
-    const p = document.createElement('div');
-    p.className = 'stage-pill' + (i === 0 ? ' active' : '');
-    pills.appendChild(p);
-  });
+function updateProgress() {
+  var segs = document.querySelectorAll('.progress-seg');
+  var filled = Math.floor((exchangeCount / 10) * segs.length);
+  segs.forEach(function(s, i) { s.classList.toggle('filled', i < filled); });
+
+  var stage = getCurrentStage();
+  document.getElementById('progress-label').textContent = stage.label;
+  document.getElementById('stage-text').textContent = getInputPrompt();
+}
+
+function getCurrentStage() {
+  var stage = STAGES[0];
+  for (var i = STAGES.length - 1; i >= 0; i--) {
+    if (exchangeCount >= STAGES[i].exchanges) { stage = STAGES[i]; break; }
+  }
+  return stage;
+}
+
+function getInputPrompt() {
+  var stage = getCurrentStage();
+  var prompts = {
+    'explore': 'pick what you think is right',
+    'connect': 'choose the best connections',
+    'question': 'explain your thinking',
+    'rearrange': 'put these in order',
+    'unlock': 'fill in the blanks'
+  };
+  return prompts[stage.name] || 'your turn';
 }
 
 // ═══════════════════════════════════════════
-// SYSTEM PROMPT
+// MIND MAP / BENTO BOXES
 // ═══════════════════════════════════════════
-function buildSystem() {
-  const ctx = {
-    '5º ano':  '5th grade Brazilian student, studying basic sciences, nature, ecosystems, geography.',
-    '6º ano':  '6th grade Brazilian student, studying ecosystems, matter, ancient civilizations, climate.',
-    '7º ano':  '7th grade Brazilian student, studying SDGs, sustainable cities, inequality, climate change.',
-    '8º ano':  '8th grade Brazilian student, studying physics, chemistry, human body, modern history.',
-    '9º ano':  '9th grade Brazilian student, studying Arduino, circuits, Tinkercad, sensors, programming.',
-    '1ª série': 'First year high school (EM1), studying intro physics, chemistry, biology, math.',
-    '2ª série': 'Second year high school (EM2), studying thermodynamics, genetics, philosophy, statistics.',
-    '3ª série': 'Third year high school (EM3), preparing for vestibular with advanced topics.',
+function addConnectionLine() {
+  var track = document.getElementById('mindmap-track');
+  var conn = document.createElement('div');
+  conn.className = 'conn-line';
+  conn.innerHTML = '<div class="arrow"></div>';
+  track.appendChild(conn);
+}
+
+function addKaiBox(text, type, data) {
+  var track = document.getElementById('mindmap-track');
+
+  if (track.children.length > 0) addConnectionLine();
+
+  var box = document.createElement('div');
+  box.className = 'bento-box kai-box' + (type === 'synthesis' ? ' synthesis' : '');
+
+  var labels = {
+    'quiz': 'KAI · quick quiz',
+    'open': 'KAI · thinking prompt',
+    'check': 'KAI · select all that apply',
+    'dropdown': 'KAI · pick one',
+    'rearrange': 'KAI · put in order',
+    'fill_blanks': 'KAI · complete the sentence',
+    'synthesis': 'KAI · your synthesis'
   };
 
-  return `You are Kai — a calm, wise, slightly mythical Socratic thinking guide.
+  var label = labels[type] || 'KAI';
+  box.innerHTML =
+    '<div class="box-label">' + label + '</div>' +
+    '<div class="box-content">' + esc(text).replace(/\n/g, '<br>') + '</div>' +
+    '<div id="box-input-' + exchangeCount + '"></div>';
 
-The student is a ${ctx[grade] || 'Brazilian student'}.
+  track.appendChild(box);
 
-YOUR RULES:
-1. NEVER give direct answers in the first 3 exchanges. Ask what they already know. Connect to their world.
-2. Keep responses SHORT — 2–4 sentences, ALWAYS ending with exactly ONE thoughtful question.
-3. Be warm, present, a little ancient. Not robotic. Think wise mentor, calm presence.
-4. Each exchange goes one level deeper. Celebrate partial understanding first.
-5. After 4+ meaningful exchanges showing genuine engagement, unlock a rich synthesis.
-6. Always speak English.
-7. Build a mental map — surface connections to things they've already studied (SDGs, circuits, urbanization, ecosystems, etc.)
-8. When the student shows depth >= 75, give a rich, customized answer matching their grade level.
+  // Render interactive input inside the box
+  renderBoxInput(type, data, box.querySelector('#box-input-' + exchangeCount));
 
-OUTPUT FORMAT:
-- Your response text (short, ending with one question)
-- On separate lines, these hidden tags:
-  [DEPTH:XX] — 0–100 understanding depth. Start at 5. +10 for connections made, +15 for thoughtful answers, +20 for application, +25 for synthesis.
-  [CONN:shortTag|connection description] — when you spot a curriculum link. Multiple allowed.
-  [OPENQ:your follow-up question] — the exact question you want them to ponder next.
-  When DEPTH >= 75, also add [FINAL] on its own line before your synthesis.`;
+  // Scroll to show new box
+  var scroll = document.getElementById('mindmap-scroll');
+  setTimeout(function() { scroll.scrollLeft = scroll.scrollWidth; }, 100);
+}
+
+function addUserBox(text) {
+  var track = document.getElementById('mindmap-track');
+  addConnectionLine();
+
+  var box = document.createElement('div');
+  box.className = 'bento-box user-box';
+  box.innerHTML =
+    '<div class="box-label">YOU</div>' +
+    '<div class="box-content">' + esc(text).replace(/\n/g, '<br>') + '</div>';
+
+  track.appendChild(box);
+
+  var scroll = document.getElementById('mindmap-scroll');
+  setTimeout(function() { scroll.scrollLeft = scroll.scrollWidth; }, 100);
+}
+
+function addTypingBox() {
+  var track = document.getElementById('mindmap-track');
+  addConnectionLine();
+
+  var box = document.createElement('div');
+  box.className = 'typing-box';
+  box.id = 'typing-box';
+  box.innerHTML = '<div class="box-label" style="color:var(--green)">KAI · thinking</div><div class="tdots"><span></span><span></span><span></span></div>';
+  track.appendChild(box);
+
+  var scroll = document.getElementById('mindmap-scroll');
+  setTimeout(function() { scroll.scrollLeft = scroll.scrollWidth; }, 100);
+}
+
+function removeTypingBox() {
+  var el = document.getElementById('typing-box');
+  if (el) el.remove();
 }
 
 // ═══════════════════════════════════════════
-// API CALL
+// BOX INPUT TYPES
 // ═══════════════════════════════════════════
-async function callDeepSeek(msg) {
-  history.push({ role: 'user', content: msg });
-  const r = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [{ role: 'system', content: buildSystem() }, ...history],
-      max_tokens: 500,
-      temperature: 0.75
-    })
-  });
-  if (!r.ok) {
-    const err = await r.json().catch(() => ({ error: { message: `API error ${r.status}` } }));
-    throw new Error(err.error?.message || `API error ${r.status}`);
+function renderBoxInput(type, data, container) {
+  if (!container) return;
+
+  if (type === 'quiz') {
+    renderQuiz(container, data);
+  } else if (type === 'check') {
+    renderCheckbox(container, data);
+  } else if (type === 'dropdown') {
+    renderDropdown(container, data);
+  } else if (type === 'rearrange') {
+    renderRearrange(container, data);
+  } else if (type === 'fill_blanks') {
+    renderFillBlanks(container, data);
+  } else if (type === 'open') {
+    renderOpenInBox(container);
   }
-  const d = await r.json();
-  const raw = d.choices[0].message.content;
-  history.push({ role: 'assistant', content: raw });
-  return raw;
+}
+
+function renderQuiz(container, data) {
+  var letters = ['A', 'B', 'C', 'D'];
+  var html = '<div class="quiz-options">';
+  data.options.forEach(function(opt, i) {
+    html += '<div class="quiz-opt" data-val="' + i + '" onclick="selectQuizOpt(this)">' +
+      '<div class="opt-letter">' + letters[i] + '</div>' +
+      '<div class="opt-text">' + esc(opt) + '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  html += '<button class="box-submit" id="quiz-submit-' + exchangeCount + '" disabled onclick="submitQuiz()">Confirm</button>';
+  container.innerHTML = html;
+}
+
+function selectQuizOpt(el) {
+  var parent = el.closest('.quiz-options');
+  parent.querySelectorAll('.quiz-opt').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
+  var btn = document.getElementById('quiz-submit-' + exchangeCount);
+  if (btn) btn.disabled = false;
+}
+
+function submitQuiz() {
+  var selected = document.querySelector('.quiz-opt.selected');
+  if (!selected) return;
+  var val = selected.querySelector('.opt-text').textContent;
+  addUserBox('I think: ' + val);
+  processResponse(val);
+}
+
+function renderCheckbox(container, data) {
+  var html = '<div class="check-options">';
+  data.options.forEach(function(opt, i) {
+    html += '<div class="check-opt" onclick="toggleCheckOpt(this)">' +
+      '<div class="check-box"></div>' +
+      '<span>' + esc(opt) + '</span>' +
+    '</div>';
+  });
+  html += '</div>';
+  html += '<button class="box-submit" id="check-submit-' + exchangeCount + '" disabled onclick="submitCheck()">Confirm</button>';
+  container.innerHTML = html;
+}
+
+function toggleCheckOpt(el) {
+  el.classList.toggle('selected');
+  var any = document.querySelector('.check-opt.selected');
+  var btn = document.getElementById('check-submit-' + exchangeCount);
+  if (btn) btn.disabled = !any;
+}
+
+function submitCheck() {
+  var selected = document.querySelectorAll('.check-opt.selected');
+  var vals = [];
+  selected.forEach(function(s) { vals.push(s.querySelector('span').textContent); });
+  addUserBox(vals.join(', '));
+  processResponse(vals.join(', '));
+}
+
+function renderDropdown(container, data) {
+  var html = '<div class="dropdown-wrap"><select class="dropdown-sel" id="dropdown-' + exchangeCount + '" onchange="dropdownChanged()">';
+  html += '<option value="">Choose an option...</option>';
+  data.options.forEach(function(opt) {
+    html += '<option value="' + esc(opt) + '">' + esc(opt) + '</option>';
+  });
+  html += '</select></div>';
+  html += '<button class="box-submit" id="dropdown-submit-' + exchangeCount + '" disabled onclick="submitDropdown()">Confirm</button>';
+  container.innerHTML = html;
+}
+
+function dropdownChanged() {
+  var sel = document.getElementById('dropdown-' + exchangeCount);
+  var btn = document.getElementById('dropdown-submit-' + exchangeCount);
+  if (btn) btn.disabled = !sel.value;
+}
+
+function submitDropdown() {
+  var sel = document.getElementById('dropdown-' + exchangeCount);
+  addUserBox(sel.value);
+  processResponse(sel.value);
+}
+
+function renderRearrange(container, data) {
+  var html = '<div class="rearrange-items" id="rearrange-' + exchangeCount + '">';
+  data.options.forEach(function(opt, i) {
+    html += '<div class="rearrange-item" data-val="' + esc(opt) + '" onclick="placeRearrange(this)">' +
+      '<div class="rearrange-num">?</div>' +
+      '<span>' + esc(opt) + '</span>' +
+    '</div>';
+  });
+  html += '</div>';
+  html += '<button class="box-submit" id="rearrange-submit-' + exchangeCount + '" disabled onclick="submitRearrange()">Confirm order</button>';
+  container.innerHTML = html;
+}
+
+var rearrangeOrder = [];
+function placeRearrange(el) {
+  var val = el.getAttribute('data-val');
+  if (el.classList.contains('placed')) {
+    el.classList.remove('placed');
+    el.querySelector('.rearrange-num').textContent = '?';
+    rearrangeOrder = rearrangeOrder.filter(function(v) { return v !== val; });
+  } else {
+    rearrangeOrder.push(val);
+    el.classList.add('placed');
+    el.querySelector('.rearrange-num').textContent = rearrangeOrder.length;
+  }
+  var btn = document.getElementById('rearrange-submit-' + exchangeCount);
+  if (btn) btn.disabled = rearrangeOrder.length < 2;
+}
+
+function submitRearrange() {
+  addUserBox('Order: ' + rearrangeOrder.join(' → '));
+  processResponse(rearrangeOrder.join(', '));
+  rearrangeOrder = [];
+}
+
+function renderFillBlanks(container, data) {
+  var sentence = data.sentence || '';
+  var blanks = data.blanks || [];
+  var html = '<div class="fill-sentence">';
+  var parts = sentence.split('___');
+  parts.forEach(function(part, i) {
+    html += esc(part);
+    if (i < blanks.length) {
+      html += '<input class="fill-blank" type="text" placeholder="' + esc(blanks[i]) + '" data-blank="' + i + '">';
+    }
+  });
+  html += '</div>';
+  html += '<button class="box-submit" id="fill-submit-' + exchangeCount + '" onclick="submitFillBlanks()">Submit</button>';
+  container.innerHTML = html;
+}
+
+function submitFillBlanks() {
+  var inputs = document.querySelectorAll('.fill-blank');
+  var vals = [];
+  inputs.forEach(function(inp) { vals.push(inp.value || inp.placeholder); });
+  addUserBox(vals.join(', '));
+  processResponse(vals.join(', '));
+}
+
+function renderOpenInBox(container) {
+  container.innerHTML =
+    '<div style="margin-top:12px">' +
+      '<textarea class="inp-text" id="open-inbox-' + exchangeCount + '" placeholder="Share your thoughts..." rows="2" style="width:100%"></textarea>' +
+      '<button class="box-submit" onclick="submitOpenInBox()">Send</button>' +
+    '</div>';
+}
+
+function submitOpenInBox() {
+  var inp = document.getElementById('open-inbox-' + exchangeCount);
+  if (!inp || !inp.value.trim()) return;
+  addUserBox(inp.value.trim());
+  processResponse(inp.value.trim());
+}
+
+// ═══════════════════════════════════════════
+// INPUT AREA (free text fallback)
+// ═══════════════════════════════════════════
+function renderInputZone() {
+  var zone = document.getElementById('input-zone');
+  var stage = getCurrentStage();
+
+  if (stage.name === 'explore' || stage.name === 'connect') {
+    zone.innerHTML =
+      '<div class="inp-row">' +
+        '<textarea class="inp-text" id="mi" placeholder="type your answer..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
+        '<button class="send-btn" onclick="sendFromInput()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
+      '</div>';
+    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
+  } else {
+    zone.innerHTML =
+      '<div class="inp-row">' +
+        '<textarea class="inp-text" id="mi" placeholder="explain your thinking..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
+        '<button class="send-btn" onclick="sendFromInput()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
+      '</div>';
+    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
+  }
+}
+
+function sendFromInput() {
+  var inp = document.getElementById('mi');
+  if (!inp || !inp.value.trim()) return;
+  var txt = inp.value.trim();
+  addUserBox(txt);
+  inp.value = '';
+  processResponse(txt);
+}
+
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFromInput(); } }
+
+// ═══════════════════════════════════════════
+// AI COMMUNICATION
+// ═══════════════════════════════════════════
+function buildSystemPrompt() {
+  var ctx = {
+    '5th grade':  '5th grade student (age 10-11). Keep language simple. Use concrete examples from their daily life.',
+    '6th grade':  '6th grade student (age 11-12). Can handle basic abstract concepts.',
+    '7th grade':  '7th grade student (age 12-13). Studying sustainability, climate, UN SDGs, social issues.',
+    '8th grade':  '8th grade student (age 13-14). Studying physics, chemistry, biology, modern history.',
+    '9th grade':  '9th grade student (age 14-15). Studying electricity, circuits, programming, sensors.',
+    '1st year HS':'First year high school (age 15-16). Mechanics, atomic structure, genetics, algebra.',
+    '2nd year HS':'Second year high school (age 16-17). Thermodynamics, genetics, philosophy, statistics.',
+    '3rd year HS':'Third year high school (age 17-18). College prep, advanced topics, entrance exams.',
+  };
+
+  var exchange = exchangeCount;
+  var topic = '';
+  if (history.length > 0) {
+    topic = history[0].content.substring(0, 200);
+  }
+
+  var curriculumTopics = CURRICULUM[grade] || [];
+  var curriculumStr = curriculumTopics.join(', ');
+
+  return `You are Kai, a calm Socratic thinking guide for a ${grade} student (${ctx[grade]}).
+
+STUDENT TOPIC: "${topic}"
+
+CURRICULUM CONNECTIONS (use ONLY when genuinely relevant to the student's topic):
+${curriculumStr}
+
+YOUR JOB: Guide the student to discover the answer through progressive questioning. NEVER give the answer directly until the final synthesis.
+
+EXCHANGE ${exchange + 1} — Respond based on this stage:
+
+${exchange <= 1 ? `STAGE: QUIZ
+- Generate ONE multiple choice question (4 options) about the student's topic.
+- The question should assess their prior knowledge or intuition.
+- Make it engaging, not test-like. Think curious conversation.
+- End with: "Which feels closest to what you think?"
+
+STRICT OUTPUT FORMAT:
+[TYPE:quiz]
+[QUESTION:your quiz question here]
+[OPTA:first option]
+[OPTB:second option]
+[OPTC:third option]
+[OPTD:fourth option]
+[TEXT:your brief intro before the quiz — 1-2 sentences, warm and curious]` :
+
+exchange <= 3 ? `STAGE: CHECKBOX / DEEPER QUESTION
+- Ask a question that requires them to select multiple relevant factors OR think deeper.
+- Provide 4-5 checkbox options where 2-3 are correct.
+- Or ask an open-ended "why do you think..." question.
+
+STRICT OUTPUT FORMAT (choose ONE):
+For checkbox:
+[TYPE:check]
+[QUESTION:your question here]
+[OPTA:option 1]
+[OPTB:option 2]
+[OPTC:option 3]
+[OPTD:option 4]
+[OPTE:option 5]
+[TEXT:brief context — 1-2 sentences]
+
+For open question:
+[TYPE:open]
+[TEXT:your thoughtful question that goes one level deeper — 2-3 sentences, ending with a clear question]` :
+
+exchange <= 5 ? `STAGE: OPEN TEXT — GO DEEPER
+- Ask a question that requires real thinking and explanation.
+- Connect to their curriculum ONLY if it's a genuine link (don't force Arduino/circuits unless they're talking about electricity).
+- Celebrate what they got right before probing deeper.
+
+STRICT OUTPUT FORMAT:
+[TYPE:open]
+[TEXT:your question — 2-4 sentences. Start by affirming something they said, then ask one deeper question.]` :
+
+exchange <= 7 ? `STAGE: REARRANGE — BUILD UNDERSTANDING
+- Give the student 4 concepts/factors related to their topic and ask them to order by importance/fundamentalness.
+- This helps them synthesize what they've learned.
+
+STRICT OUTPUT FORMAT:
+[TYPE:rearrange]
+[TEXT:brief intro — 1 sentence]
+[ITEM1:first concept]
+[ITEM2:second concept]
+[ITEM3:third concept]
+[ITEM4:fourth concept]` :
+
+`STAGE: FILL IN BLANKS — FINAL SYNTHESIS
+- Create a fill-in-the-blanks sentence or two that summarizes the key insight.
+- The student fills in the key terms, demonstrating understanding.
+- Then provide a warm synthesis.
+
+STRICT OUTPUT FORMAT:
+[TYPE:fill_blanks]
+[SENTENCE:This happens because ___ leads to ___, which ultimately affects ___.]
+[BLANK1:cause]
+[BLANK2:effect]
+[BLANK3:outcome]
+[TEXT:your synthesis — 3-4 sentences that tie everything together. Warm, validating, complete.]`}
+
+RULES:
+- NEVER mention Arduino, circuits, sensors, or programming UNLESS the student's topic is explicitly about technology/electricity.
+- Connections to curriculum must be GENUINE, not forced.
+- Always end with exactly one question (except in final synthesis).
+- Keep it conversational, warm, and slightly ancient — like a wise mentor.
+- Match the student's grade level in complexity.`;
+}
+
+function sendInitial() {
+  exchangeCount = 0;
+  history = [{ role: 'user', content: firstQ }];
+  updateProgress();
+
+  addUserBox(firstQ);
+  addTypingBox();
+  callAI();
+}
+
+async function callAI() {
+  try {
+    var body = {
+      model: 'deepseek-chat',
+      messages: [{ role: 'system', content: buildSystemPrompt() }, ...history],
+      max_tokens: 600,
+      temperature: 0.7
+    };
+
+    var r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!r.ok) {
+      var err = await r.json().catch(function() { return { error: { message: 'API error ' + r.status } }; });
+      throw new Error(err.error ? err.error.message : 'API error ' + r.status);
+    }
+
+    var d = await r.json();
+    var raw = d.choices[0].message.content;
+    return raw;
+  } catch (e) {
+    throw e;
+  }
 }
 
 // ═══════════════════════════════════════════
 // PARSE AI RESPONSE
 // ═══════════════════════════════════════════
-function parse(raw) {
-  let text = raw, depthVal = null, conns = [], isFinal = false, openQ = '';
+function parseAIResponse(raw) {
+  var result = { type: 'open', text: '', options: [], sentence: '', blanks: [] };
 
-  const dm = text.match(/\[DEPTH:(\d+)\]/);
-  if (dm) { depthVal = parseInt(dm[1]); text = text.replace(/\[DEPTH:\d+\]\n?/g, ''); }
+  // Extract type
+  var typeMatch = raw.match(/\[TYPE:(\w+)\]/);
+  if (typeMatch) result.type = typeMatch[1];
 
-  if (text.includes('[FINAL]')) { isFinal = true; text = text.replace(/\[FINAL\]\n?/g, ''); }
+  // Extract question
+  var qMatch = raw.match(/\[QUESTION:([^\]]+)\]/);
+  if (qMatch) result.question = qMatch[1];
 
-  const cr = /\[CONN:([^\|]+)\|([^\]]+)\]/g;
-  let m;
-  while ((m = cr.exec(text)) !== null) conns.push({ tag: m[1].trim(), text: m[2].trim() });
-  text = text.replace(/\[CONN:[^\]]+\]\n?/g, '');
-
-  const oq = text.match(/\[OPENQ:([^\]]+)\]/);
-  if (oq) { openQ = oq[1].trim(); text = text.replace(/\[OPENQ:[^\]]+\]\n?/g, ''); }
-
-  return { text: text.trim(), depth: depthVal, conns, isFinal, openQ };
-}
-
-// ═══════════════════════════════════════════
-// CONNECTIONS
-// ═══════════════════════════════════════════
-function addConns(conns) {
-  if (!conns.length) return;
-  const wrap = document.getElementById('conns-wrap');
-  const inner = document.getElementById('conns-inner');
-  wrap.classList.remove('hidden-bar');
-  conns.forEach(c => {
-    if (connections.find(x => x.tag === c.tag)) return;
-    connections.push(c);
-    const chip = document.createElement('div');
-    chip.className = 'conn-chip';
-    chip.innerHTML = `<div class="cdot"></div><span class="ctag">${esc(c.tag)}</span><span class="ctxt">${esc(c.text)}</span>`;
-    inner.appendChild(chip);
-    inner.scrollLeft = inner.scrollWidth;
-  });
-}
-
-// ═══════════════════════════════════════════
-// DEPTH TRACKING
-// ═══════════════════════════════════════════
-function updateDepth(val) {
-  if (val === null) return;
-  depth = Math.min(100, Math.max(depth, val));
-  const stg = Math.min(4, Math.floor(depth / 20));
-  depthStage = stg;
-  document.getElementById('stage-name').textContent = STAGES[stg].name;
-
-  // Update depth bar segments
-  const segs = document.querySelectorAll('.depth-seg');
-  const filled = Math.floor((depth / 100) * segs.length);
-  segs.forEach((s, i) => s.classList.toggle('filled', i < filled));
-
-  // Update stage pills
-  document.querySelectorAll('.stage-pill').forEach((p, i) => p.classList.toggle('active', i === stg));
-
-  renderZone();
-}
-
-// ═══════════════════════════════════════════
-// CHAT UI
-// ═══════════════════════════════════════════
-function appendMsg(role, text, isFinal) {
-  isFinal = isFinal || false;
-  const chat = document.getElementById('chat');
-  const anchor = document.getElementById('anchor');
-  const div = document.createElement('div');
-  div.className = 'msg ' + (role === 'kai' ? 'km' : 'um') + (isFinal ? ' fin' : '');
-  var whoText = role === 'kai' ? (isFinal ? '\u2726 kai \u00b7 your synthesis' : 'kai') : 'you';
-  div.innerHTML = '<div class="mwho">' + whoText + '</div><div class="mbody">' + text.replace(/\n/g, '<br>') + '</div>';
-  chat.insertBefore(div, anchor);
-  anchor.scrollIntoView({ behavior: 'smooth' });
-}
-
-function showThinking() {
-  const chat = document.getElementById('chat');
-  const anchor = document.getElementById('anchor');
-  const div = document.createElement('div');
-  div.className = 'msg km';
-  div.id = 'thinking';
-  div.innerHTML = '<div class="mwho">kai</div><div class="tdots"><span></span><span></span><span></span></div>';
-  chat.insertBefore(div, anchor);
-  anchor.scrollIntoView({ behavior: 'smooth' });
-}
-
-function hideThinking() {
-  var el = document.getElementById('thinking');
-  if (el) el.remove();
-}
-
-function esc(s) {
-  var d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-// ═══════════════════════════════════════════
-// INPUT ZONE (changes per depth stage)
-// ═══════════════════════════════════════════
-var rankItems = [], rankOrder = [];
-
-function renderZone() {
-  var zone = document.getElementById('input-zone');
-  var stg = depthStage;
-
-  if (stg === 0) {
-    // Stage 0: Free input
-    zone.innerHTML =
-      '<div class="frow">' +
-        '<textarea class="cta" id="mi" placeholder="' + STAGES[0].desc + '..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
-        '<button class="sbtn" onclick="send()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
-      '</div>';
-    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
-
-  } else if (stg === 1) {
-    // Stage 1: Topic chips + free text
-    var gradeChips = CHIPS[grade] || [];
-    var chipsHTML = gradeChips.map(function(t) {
-      return '<button class="tchip" onclick="chipSend(\'' + esc(t) + '\')">' + esc(t) + '</button>';
-    }).join('');
-    zone.innerHTML =
-      '<div class="chips-row">' + chipsHTML + '</div>' +
-      '<div class="frow">' +
-        '<textarea class="cta" id="mi" placeholder="or write your own thought..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
-        '<button class="sbtn" onclick="send()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
-      '</div>';
-    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
-
-  } else if (stg === 2) {
-    // Stage 2: Open question highlight + free text
-    var oqHTML = lastOpenQ
-      ? '<div class="open-q-wrap"><div class="open-q" onclick="useOpenQ()">' + esc(lastOpenQ) + '</div></div>'
-      : '';
-    zone.innerHTML =
-      oqHTML +
-      '<div class="frow">' +
-        '<textarea class="cta" id="mi" placeholder="dive into the question..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
-        '<button class="sbtn" onclick="send()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
-      '</div>';
-    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
-
-  } else if (stg === 3) {
-    // Stage 3: Rearrangement / ranking
-    buildRank();
-
-  } else {
-    // Stage 4: Final synthesis — free input with glow
-    zone.innerHTML =
-      '<div class="frow">' +
-        '<textarea class="cta" id="mi" placeholder="your thoughts, or ask something new..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)" style="box-shadow:0 0 0 2px rgba(26,223,128,0.08),inset 0 0 0 1px rgba(26,223,128,0.06)"></textarea>' +
-        '<button class="sbtn" onclick="send()" style="box-shadow:0 4px 24px rgba(26,223,128,0.5),0 0 50px rgba(26,223,128,0.15)"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
-      '</div>';
-    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
+  // Extract options
+  var optRegex = /\[OPT([A-E]):([^\]]+)\]/g;
+  var optMatch;
+  while ((optMatch = optRegex.exec(raw)) !== null) {
+    result.options.push(optMatch[2].trim());
   }
-}
 
-function useOpenQ() {
-  var inp = document.getElementById('mi');
-  if (inp) { inp.value = lastOpenQ; inp.focus(); autoResize(inp); }
-}
-
-function buildRank() {
-  var zone = document.getElementById('input-zone');
-  var items = connections.slice(-4).map(function(c) { return c.text; });
-  if (items.length < 2) { depthStage = 2; renderZone(); return; }
-
-  rankItems = items.slice();
-  rankOrder = [];
-  var itemsHTML = items.map(function(it, i) {
-    return '<div class="ri" data-i="' + i + '" onclick="toggleRank(this)">' + esc(it) + '</div>';
-  }).join('');
-  zone.innerHTML =
-    '<div class="rank-wrap">' +
-      '<div class="rank-lbl">Rank these ideas from most to least fundamental:</div>' +
-      '<div class="rank-items">' + itemsHTML + '</div>' +
-      '<button class="rsub" onclick="submitRank()">Submit ranking</button>' +
-    '</div>';
-}
-
-function toggleRank(el) {
-  var i = parseInt(el.dataset.i);
-  if (rankOrder.indexOf(i) !== -1) {
-    rankOrder = rankOrder.filter(function(x) { return x !== i; });
-    el.classList.remove('sel');
-    el.textContent = rankItems[i];
-  } else {
-    rankOrder.push(i);
-    el.classList.add('sel');
-    el.textContent = rankOrder.length + '. ' + rankItems[i];
+  // Extract items for rearrange
+  var itemRegex = /\[ITEM(\d+):([^\]]+)\]/g;
+  var itemMatch;
+  while ((itemMatch = itemRegex.exec(raw)) !== null) {
+    result.options.push(itemMatch[2].trim());
   }
-}
 
-function submitRank() {
-  if (rankOrder.length < 2) return;
-  var ranked = rankOrder.map(function(i) { return rankItems[i]; }).join(' \u2192 ');
-  sendMsg('I\'d rank these from most to least fundamental: ' + ranked);
-}
+  // Extract fill blanks
+  var sentMatch = raw.match(/\[SENTENCE:([^\]]+)\]/);
+  if (sentMatch) result.sentence = sentMatch[1];
 
-function chipSend(t) {
-  var inp = document.getElementById('mi');
-  var cur = inp ? inp.value.trim() : '';
-  sendMsg(cur ? cur + ' \u2014 related to ' + t : 'I want to explore the connection to ' + t);
+  var blankRegex = /\[BLANK(\d+):([^\]]+)\]/g;
+  var blankMatch;
+  while ((blankMatch = blankRegex.exec(raw)) !== null) {
+    result.blanks.push(blankMatch[2].trim());
+  }
+
+  // Extract main text (everything not in tags)
+  result.text = raw
+    .replace(/\[TYPE:\w+\]\n?/g, '')
+    .replace(/\[QUESTION:[^\]]+\]\n?/g, '')
+    .replace(/\[OPT[A-E]:[^\]]+\]\n?/g, '')
+    .replace(/\[ITEM\d+:[^\]]+\]\n?/g, '')
+    .replace(/\[SENTENCE:[^\]]+\]\n?/g, '')
+    .replace(/\[BLANK\d+:[^\]]+\]\n?/g, '')
+    .replace(/\[TEXT:[^\]]+\]\n?/g, '')
+    .replace(/\[DEPTH:\d+\]\n?/g, '')
+    .replace(/\[FINAL\]\n?/g, '')
+    .replace(/\[CONN:[^\]]+\]\n?/g, '')
+    .replace(/\[OPENQ:[^\]]+\]\n?/g, '')
+    .trim();
+
+  // Also check for [TEXT:...] tag
+  var textMatch = raw.match(/\[TEXT:([^\]]+)\]/);
+  if (textMatch && result.text.length < 20) {
+    result.text = textMatch[1].trim();
+  }
+
+  return result;
 }
 
 // ═══════════════════════════════════════════
-// SEND
+// PROCESS
 // ═══════════════════════════════════════════
-function send() {
-  var inp = document.getElementById('mi');
-  if (!inp) return;
-  var txt = inp.value.trim();
-  if (!txt || busy) return;
-  inp.value = '';
-  autoResize(inp);
-  sendMsg(txt);
-}
-
-async function sendMsg(txt) {
+async function processResponse(studentAnswer) {
   if (busy) return;
   busy = true;
-  appendMsg('user', txt);
-  showThinking();
+
+  history.push({ role: 'user', content: studentAnswer });
+  exchangeCount++;
+  updateProgress();
+
+  addTypingBox();
+
   try {
-    var raw = await callDeepSeek(txt);
-    hideThinking();
-    var parsed = parse(raw);
-    appendMsg('kai', parsed.text, parsed.isFinal);
-    if (parsed.depth !== null) updateDepth(parsed.depth);
-    if (parsed.conns.length) addConns(parsed.conns);
-    if (parsed.openQ) lastOpenQ = parsed.openQ;
+    var raw = await callAI();
+    removeTypingBox();
+
+    var parsed = parseAIResponse(raw);
+    history.push({ role: 'assistant', content: raw });
+
+    // Check if this is a synthesis (final)
+    var isSynthesis = raw.includes('[FINAL]') || exchangeCount >= 8;
+
+    addKaiBox(parsed.text || parsed.question || '...', parsed.type, {
+      options: parsed.options,
+      sentence: parsed.sentence,
+      blanks: parsed.blanks
+    });
+
+    // Show free text input for open questions
+    if (parsed.type === 'open') {
+      renderInputZone();
+    }
+
   } catch (e) {
-    hideThinking();
-    appendMsg('kai', 'Something went wrong. Check your API key.\n' + esc(e.message));
+    removeTypingBox();
+    addKaiBox('Something went wrong: ' + e.message, 'open', {});
+    renderInputZone();
   }
+
   busy = false;
 }
 
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+// ═══════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
 }
 
 function autoResize(el) {
