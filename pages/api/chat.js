@@ -12,22 +12,22 @@ async function getReadmeContext() {
 
 function buildStageRule(exchangeCount = 0) {
   if (exchangeCount <= 1) {
-    return 'STAGE: SPOT. Make the first move a relationship choice, not an answer. Output exactly: [TYPE:link][TEXT:max 8 words][QUESTION:max 12 words][NODEA:topic clue][NODEB:objective/pattern from README][REL1:verb][REL2:verb][REL3:verb][REL4:verb]. Relation words under 3 words.';
+    return 'STAGE: SPOT. Start with a quiz, not an answer. Output exactly: [TYPE:quiz][TEXT:max 8 words][QUESTION:max 12 words][OPTA:concrete clue][OPTB:real example][OPTC:problem to test][OPTD:possible action]. Options under 7 words.';
   }
 
   if (exchangeCount <= 3) {
-    return 'STAGE: CONNECT. Make the student select 2-3 evidence links. Output: [TYPE:check][TEXT:max 8 words][QUESTION:max 12 words][OPTA:... -> ...][OPTB:... -> ...][OPTC:... -> ...][OPTD:... -> ...][OPTE:... -> ...]. Each option under 7 words.';
+    return 'STAGE: TEST. Give one short claim for true/false. Output exactly: [TYPE:true_false][TEXT:one testable claim, max 12 words][QUESTION:True or false?].';
   }
 
   if (exchangeCount <= 5) {
-    return 'STAGE: TEST. Make the student lock one stronger relationship. Output: [TYPE:link][TEXT:max 8 words][QUESTION:max 12 words][NODEA:one idea][NODEB:another idea][REL1:causes][REL2:depends on][REL3:changes][REL4:reveals].';
+    return 'STAGE: CHOOSE. Use multiple choice to make the student pick the strongest reason or next step. Output: [TYPE:quiz][TEXT:max 8 words][QUESTION:max 12 words][OPTA:...][OPTB:...][OPTC:...][OPTD:...]. Options under 7 words.';
   }
 
   if (exchangeCount <= 7) {
-    return 'STAGE: CHAIN. Give four pieces to order as a cause-to-impact chain. Output: [TYPE:rearrange][TEXT:max 8 words][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...]. Items under 5 words.';
+    return 'STAGE: APPLY. Ask for one short original sentence. Output: [TYPE:open][TEXT:max 8 words][QUESTION:max 14 words].';
   }
 
-  return 'STAGE: NAME. If the student has built enough correct links, trigger the reward. Output: [TYPE:fill_blanks][SENTENCE:When ___ connects to ___, it can change ___.][BLANK1:keyword from README][BLANK2:keyword from README][BLANK3:impact][TEXT:Voce desbloqueou o raciocinio! Para registrar essa conquista, complete as lacunas com os conceitos que descobrimos:].';
+  return 'STAGE: NAME. If the student shows enough reasoning, trigger the reward. Output: [TYPE:fill_blanks][SENTENCE:When ___ connects to ___, it can change ___.][BLANK1:keyword from README][BLANK2:keyword from README][BLANK3:impact][TEXT:Voce desbloqueou o raciocinio! Para registrar essa conquista, complete as lacunas com os conceitos que descobrimos:].';
 }
 
 function buildKaiPrompt(readmeContext, kaiContext = {}) {
@@ -54,13 +54,15 @@ Codigo de etica:
 - Em progresso: provoque com por que e como.
 - Avancado: desafie aplicacao Maker real.
 - Use o modelo clue -> example -> problem -> action.
-- Prefira escolhas, relacoes, cadeias e lacunas a texto livre.
+- Prefira quiz, multipla escolha, verdadeiro/falso, perguntas abertas curtas e lacunas.
+- Nao use rotulos antigos de relacao como atividade.
 - Linguagem curta, inspiradora e tecnica na medida certa.
 - Referencias permitidas quando relevantes: sensores, circuitos, biomimetica, prototipos, ODS, cidades sustentaveis.
 
 Formato obrigatorio:
 - Responda somente com tags que o app entende.
-- Tags possiveis: [TYPE:], [TEXT:], [QUESTION:], [NODEA:], [NODEB:], [REL1:]..[REL4:], [OPTA:]..[OPTE:], [ITEM1:]..[ITEM4:], [SENTENCE:], [BLANK1:]..[BLANK3:].
+- Tipos permitidos: [TYPE:quiz], [TYPE:true_false], [TYPE:open], [TYPE:fill_blanks].
+- Tags possiveis: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTE:], [SENTENCE:], [BLANK1:]..[BLANK3:].
 - [TEXT:] deve ter menos de 12 palavras.
 - [QUESTION:] deve ter menos de 14 palavras.
 - Opcoes devem ter menos de 7 palavras.
