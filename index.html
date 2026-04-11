@@ -780,7 +780,10 @@ function addTypingBox() {
 
 function removeTypingBox() {
   var el = document.getElementById('typing-box');
-  if (el) el.remove();
+  if (!el) return;
+  var prev = el.previousElementSibling;
+  el.remove();
+  if (prev && prev.classList.contains('conn-line')) prev.remove();
 }
 
 // ═══════════════════════════════════════════
@@ -1015,14 +1018,38 @@ Respond in the output format tags: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTD
 Keep responses short. End with one question (except final synthesis).`;
 }
 
-function sendInitial() {
+async function sendInitial() {
   exchangeCount = 0;
   history = [{ role: 'user', content: firstQ }];
   updateProgress();
 
   addUserBox(firstQ);
   addTypingBox();
-  callAI();
+
+  busy = true;
+  try {
+    var raw = await callAI();
+    removeTypingBox();
+
+    var parsed = parseAIResponse(raw);
+    history.push({ role: 'assistant', content: raw });
+
+    addKaiBox(parsed.text || parsed.question || '...', parsed.type, {
+      options: parsed.options,
+      sentence: parsed.sentence,
+      blanks: parsed.blanks
+    });
+
+    if (parsed.type === 'open') {
+      renderInputZone();
+    }
+  } catch (e) {
+    removeTypingBox();
+    addKaiBox('Something went wrong: ' + e.message, 'open', {});
+    renderInputZone();
+  }
+
+  busy = false;
 }
 
 async function callAI() {
