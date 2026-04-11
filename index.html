@@ -1013,6 +1013,8 @@ function buildSystemPrompt() {
   };
   return `You are Kai, a calm Socratic thinking guide. Student is ${grade} (${ctx[grade]||'student'}).
 Guide through progressive questioning. NEVER give answers directly. Be warm, conversational.
+If the student asks "what is..." or asks for a definition, treat it as a topic to investigate. Do NOT define it, explain it, summarize it, or answer it directly.
+Your job is to ask the next useful question, give clues, or offer choices that make the student reason.
 Connect to their curriculum ONLY if genuinely relevant — NEVER force Arduino/circuits/tech unless topic is about it.
 Respond in the output format tags: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTD:], [ITEM1:]..[ITEM4:], [SENTENCE:], [BLANK1:]..[BLANK3:].
 Keep responses short. End with one question (except final synthesis).`;
@@ -1031,10 +1033,10 @@ async function sendInitial() {
     var raw = await callAI();
     removeTypingBox();
 
-    var parsed = parseAIResponse(raw);
-    history.push({ role: 'assistant', content: raw });
+    var parsed = coerceInitialResponse(parseAIResponse(raw));
+    history.push({ role: 'assistant', content: getKaiBoxText(parsed) });
 
-    addKaiBox(parsed.text || parsed.question || '...', parsed.type, {
+    addKaiBox(getKaiBoxText(parsed), parsed.type, {
       options: parsed.options,
       sentence: parsed.sentence,
       blanks: parsed.blanks
@@ -1059,15 +1061,14 @@ async function callAI() {
     // Truncate history to last 6 messages to save tokens
     var trimmedHistory = history.slice(-6);
 
-    // Build stage instruction as a user message (not in system prompt)
+    // Keep stage rules in the system prompt so direct user questions do not override them.
     var stageInstr = buildStageInstruction();
 
     var body = {
       model: IS_LOCAL ? 'qwen2.5:7b' : 'llama-3.3-70b-versatile',
       messages: [
-        { role: 'system', content: buildSystemPrompt() },
-        ...trimmedHistory,
-        { role: 'user', content: stageInstr }
+        { role: 'system', content: buildSystemPrompt() + '\n\n' + stageInstr },
+        ...trimmedHistory
       ],
       max_tokens: 300,
       temperature: 0.7
@@ -1101,11 +1102,11 @@ async function callAI() {
 
 function buildStageInstruction() {
   var ex = exchangeCount;
-  if (ex <= 1) return '[SYSTEM INSTRUCTION] You are on exchange 1-2 (QUIZ stage). Generate exactly ONE multiple choice question with 4 options about the topic. Output format: [TYPE:quiz][QUESTION:...][OPTA:...][OPTB:...][OPTC:...][OPTD:...][TEXT:1-2 sentence intro]. End with "Which feels closest to what you think?"';
-  if (ex <= 3) return '[SYSTEM INSTRUCTION] You are on exchange 3-4 (CHECKBOX stage). Ask them to select multiple relevant factors. Output: [TYPE:check][QUESTION:...][OPTA:...][OPTB:...][OPTC:...][OPTD:...][OPTE:...][TEXT:1-2 sentence context]. Or use [TYPE:open] for a deeper question.';
-  if (ex <= 5) return '[SYSTEM INSTRUCTION] You are on exchange 5-6 (OPEN stage). Ask one deeper question. Affirm what they got right first. Output: [TYPE:open][TEXT:2-4 sentences ending with a clear question].';
-  if (ex <= 7) return '[SYSTEM INSTRUCTION] You are on exchange 7-8 (REARRANGE stage). Give 4 concepts related to their topic. Output: [TYPE:rearrange][TEXT:1 sentence intro][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...].';
-  return '[SYSTEM INSTRUCTION] FINAL SYNTHESIS stage. Create a fill-in-blanks sentence summarizing the key insight, then give a warm synthesis. Output: [TYPE:fill_blanks][SENTENCE:...][BLANK1:...][BLANK2:...][BLANK3:...][TEXT:3-4 sentence synthesis].';
+  if (ex <= 1) return 'STAGE: exchange 1-2, QUIZ. Generate exactly ONE multiple choice question with 4 options about how to think about the topic. Do NOT define the topic or give the answer. Output exactly: [TYPE:quiz][TEXT:one short clue, not a definition][QUESTION:one reasoning question][OPTA:...][OPTB:...][OPTC:...][OPTD:...].';
+  if (ex <= 3) return 'STAGE: exchange 3-4, CHECKBOX. Ask them to select multiple relevant factors. Do NOT explain the answer. Output: [TYPE:check][TEXT:one short bridge][QUESTION:...][OPTA:...][OPTB:...][OPTC:...][OPTD:...][OPTE:...]. Or use [TYPE:open] for a deeper question.';
+  if (ex <= 5) return 'STAGE: exchange 5-6, OPEN. Ask one deeper question. Affirm what they reasoned, without revealing the full answer. Output: [TYPE:open][TEXT:2-4 sentences ending with a clear question].';
+  if (ex <= 7) return 'STAGE: exchange 7-8, REARRANGE. Give 4 concepts related to their topic. Output: [TYPE:rearrange][TEXT:1 sentence intro][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...].';
+  return 'STAGE: final synthesis. Create a fill-in-blanks sentence summarizing the key insight, then give a warm synthesis. Output: [TYPE:fill_blanks][SENTENCE:...][BLANK1:...][BLANK2:...][BLANK3:...][TEXT:3-4 sentence synthesis].';
 }
 
 // ═══════════════════════════════════════════
@@ -1173,6 +1174,46 @@ function parseAIResponse(raw) {
 // ═══════════════════════════════════════════
 // PROCESS
 // ═══════════════════════════════════════════
+function getKaiBoxText(parsed) {
+  var parts = [];
+  if (parsed.text) parts.push(parsed.text);
+  if (parsed.question && parsed.question !== parsed.text) parts.push(parsed.question);
+  return parts.join('\n\n') || parsed.question || '...';
+}
+
+function getQuestionTopic() {
+  var topic = (firstQ || 'your question').trim()
+    .replace(/^(what|who|where|when|why|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\s+/i, '')
+    .replace(/^(what|who|where|when|why|how)\s+/i, '')
+    .replace(/[?.!]+$/g, '')
+    .trim();
+
+  return topic || 'your question';
+}
+
+function buildInitialFallbackResponse() {
+  return {
+    type: 'quiz',
+    text: 'Let us treat "' + getQuestionTopic() + '" as a clue before we name it.',
+    question: 'Which angle would help you reason it out first?',
+    options: [
+      'The words or roots in the term',
+      'Examples where it might appear',
+      'The problem it might connect to',
+      'What you already know about it'
+    ],
+    sentence: '',
+    blanks: []
+  };
+}
+
+function coerceInitialResponse(parsed) {
+  var isUsableQuiz = parsed.type === 'quiz' && parsed.question && parsed.options.length >= 4;
+  if (!isUsableQuiz) return buildInitialFallbackResponse();
+  parsed.options = parsed.options.slice(0, 4);
+  return parsed;
+}
+
 async function processResponse(studentAnswer) {
   if (busy) return;
   busy = true;
@@ -1188,12 +1229,12 @@ async function processResponse(studentAnswer) {
     removeTypingBox();
 
     var parsed = parseAIResponse(raw);
-    history.push({ role: 'assistant', content: raw });
+    history.push({ role: 'assistant', content: getKaiBoxText(parsed) });
 
     // Check if this is a synthesis (final)
     var isSynthesis = raw.includes('[FINAL]') || exchangeCount >= 8;
 
-    addKaiBox(parsed.text || parsed.question || '...', parsed.type, {
+    addKaiBox(getKaiBoxText(parsed), parsed.type, {
       options: parsed.options,
       sentence: parsed.sentence,
       blanks: parsed.blanks
