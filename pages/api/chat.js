@@ -8,6 +8,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
+  const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+  const payload = {
+    ...req.body,
+    model,
+  };
+
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -15,7 +21,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
