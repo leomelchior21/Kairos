@@ -214,6 +214,17 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
   color: var(--green); font-size: 10px; font-weight: 700; padding: 4px 12px;
   border-radius: 20px; letter-spacing: 0.06em;
 }
+.score-pill {
+  background: rgba(184,240,212,0.08); border: 1px solid rgba(184,240,212,0.16);
+  color: var(--mint); font-size: 10px; font-weight: 700; padding: 4px 12px;
+  border-radius: 20px; letter-spacing: 0.06em; white-space: nowrap;
+}
+.score-pill.pulse { animation: scorePulse 0.55s ease; }
+@keyframes scorePulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.08); box-shadow: 0 0 18px rgba(26,223,128,0.35); }
+  100% { transform: scale(1); }
+}
 
 /* Progress bar */
 .progress-wrap {
@@ -309,6 +320,58 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
 }
 .quiz-opt.selected .opt-letter { background: var(--green); color: #060b08; }
 .quiz-opt .opt-text { flex: 1; }
+
+/* Link builder */
+.link-board {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+.link-nodes {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.link-node {
+  min-height: 42px;
+  border: 1px solid rgba(26,223,128,0.16);
+  border-radius: 8px;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--txt);
+  background: rgba(26,223,128,0.05);
+  font-size: 12px;
+  font-weight: 700;
+}
+.link-arrow {
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 700;
+}
+.link-relations {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.link-rel {
+  min-height: 38px;
+  border: 1px solid rgba(26,223,128,0.12);
+  border-radius: 8px;
+  padding: 8px 9px;
+  background: rgba(26,223,128,0.04);
+  color: var(--txt-mid);
+  font-family: 'Atkinson Hyperlegible', 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.link-rel:hover { background: rgba(26,223,128,0.09); color: var(--txt); }
+.link-rel.selected { background: rgba(26,223,128,0.16); border-color: var(--green); color: var(--green); }
 
 /* Checkbox options */
 .check-options { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
@@ -514,6 +577,7 @@ textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0
       <div class="hdr-name">Kai</div>
       <div class="hdr-sub">Kairos · thinking guide</div>
     </div>
+    <div class="score-pill" id="score-pill">0 links</div>
     <div class="grade-pill" id="grade-pill"></div>
   </div>
   <div class="progress-wrap">
@@ -548,7 +612,7 @@ const API_URL = IS_LOCAL
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
-let grade = '', firstQ = '', exchangeCount = 0, busy = false;
+let grade = '', firstQ = '', exchangeCount = 0, linkScore = 0, streak = 0, busy = false;
 let history = [], pendingInput = null; // { type, ...data }
 
 const STAGES = [
@@ -649,7 +713,10 @@ async function goToGrade() {
 // ═══════════════════════════════════════════
 async function selectGrade(g) {
   grade = g;
+  linkScore = 0;
+  streak = 0;
   document.getElementById('grade-pill').textContent = g;
+  updateConnectionMeter();
   await transitionOut(document.getElementById('screen-grade'));
   document.getElementById('screen-grade').classList.add('hidden');
   document.getElementById('screen-main').classList.remove('hidden');
@@ -682,6 +749,22 @@ function updateProgress() {
   var stage = getCurrentStage();
   document.getElementById('progress-label').textContent = stage.label;
   document.getElementById('stage-text').textContent = getInputPrompt();
+}
+
+function updateConnectionMeter(pulse) {
+  var pill = document.getElementById('score-pill');
+  if (!pill) return;
+  pill.textContent = linkScore + (linkScore === 1 ? ' link' : ' links') + (streak > 1 ? ' x' + streak : '');
+  if (!pulse) return;
+  pill.classList.remove('pulse');
+  void pill.offsetWidth;
+  pill.classList.add('pulse');
+}
+
+function recordConnectionMove() {
+  linkScore++;
+  streak++;
+  updateConnectionMeter(true);
 }
 
 function getCurrentStage() {
@@ -724,6 +807,7 @@ function addKaiBox(text, type, data) {
   box.className = 'bento-box kai-box' + (type === 'synthesis' ? ' synthesis' : '');
 
   var labels = {
+    'link': 'KAI - link quest',
     'quiz': 'KAI · quick quiz',
     'open': 'KAI · thinking prompt',
     'check': 'KAI · select all that apply',
@@ -749,14 +833,14 @@ function addKaiBox(text, type, data) {
   setTimeout(function() { scroll.scrollLeft = scroll.scrollWidth; }, 100);
 }
 
-function addUserBox(text) {
+function addUserBox(text, label) {
   var track = document.getElementById('mindmap-track');
   addConnectionLine();
 
   var box = document.createElement('div');
   box.className = 'bento-box user-box';
   box.innerHTML =
-    '<div class="box-label">YOU</div>' +
+    '<div class="box-label">' + esc(label || 'YOU') + '</div>' +
     '<div class="box-content">' + esc(text).replace(/\n/g, '<br>') + '</div>';
 
   track.appendChild(box);
@@ -795,6 +879,8 @@ function renderBoxInput(type, data, container) {
 
   if (type === 'quiz') {
     renderQuiz(container, data);
+  } else if (type === 'link') {
+    renderLinkBuilder(container, data);
   } else if (type === 'check') {
     renderCheckbox(container, data);
   } else if (type === 'dropdown') {
@@ -806,6 +892,55 @@ function renderBoxInput(type, data, container) {
   } else if (type === 'open') {
     renderOpenInBox(container);
   }
+}
+
+function renderLinkBuilder(container, data) {
+  var nodes = data.nodes && data.nodes.length >= 2 ? data.nodes : [getQuestionTopic(), 'bigger pattern'];
+  var rels = data.options && data.options.length ? data.options.slice(0, 4) : [
+    'creates',
+    'responds to',
+    'changes',
+    'depends on'
+  ];
+
+  var html = '<div class="link-board" id="link-board-' + exchangeCount + '">' +
+    '<div class="link-nodes">' +
+      '<div class="link-node">' + esc(nodes[0]) + '</div>' +
+      '<div class="link-arrow">?</div>' +
+      '<div class="link-node">' + esc(nodes[1]) + '</div>' +
+    '</div>' +
+    '<div class="link-relations">';
+
+  rels.forEach(function(rel) {
+    html += '<button class="link-rel" onclick="selectLinkRel(this)">' + esc(rel) + '</button>';
+  });
+
+  html += '</div>' +
+    '<button class="box-submit" id="link-submit-' + exchangeCount + '" disabled onclick="submitLink()">Lock link</button>' +
+    '</div>';
+
+  container.innerHTML = html;
+}
+
+function selectLinkRel(el) {
+  var board = el.closest('.link-board');
+  board.querySelectorAll('.link-rel').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
+  var btn = document.getElementById('link-submit-' + exchangeCount);
+  if (btn) btn.disabled = false;
+}
+
+function submitLink() {
+  if (busy) return;
+  var board = document.getElementById('link-board-' + exchangeCount);
+  if (!board) return;
+  var selected = board.querySelector('.link-rel.selected');
+  if (!selected) return;
+  var nodes = board.querySelectorAll('.link-node');
+  var link = nodes[0].textContent + ' -> ' + selected.textContent + ' -> ' + nodes[1].textContent;
+  addUserBox(link, 'YOU - LINK #' + (linkScore + 1));
+  recordConnectionMove();
+  processResponse(link);
 }
 
 function renderQuiz(container, data) {
@@ -831,10 +966,12 @@ function selectQuizOpt(el) {
 }
 
 function submitQuiz() {
+  if (busy) return;
   var selected = document.querySelector('.quiz-opt.selected');
   if (!selected) return;
   var val = selected.querySelector('.opt-text').textContent;
-  addUserBox('I think: ' + val);
+  addUserBox('I think: ' + val, 'YOU - LINK #' + (linkScore + 1));
+  recordConnectionMove();
   processResponse(val);
 }
 
@@ -859,10 +996,12 @@ function toggleCheckOpt(el) {
 }
 
 function submitCheck() {
+  if (busy) return;
   var selected = document.querySelectorAll('.check-opt.selected');
   var vals = [];
   selected.forEach(function(s) { vals.push(s.querySelector('span').textContent); });
-  addUserBox(vals.join(', '));
+  addUserBox(vals.join(', '), 'YOU - LINKS #' + (linkScore + 1));
+  recordConnectionMove();
   processResponse(vals.join(', '));
 }
 
@@ -884,8 +1023,10 @@ function dropdownChanged() {
 }
 
 function submitDropdown() {
+  if (busy) return;
   var sel = document.getElementById('dropdown-' + exchangeCount);
-  addUserBox(sel.value);
+  addUserBox(sel.value, 'YOU - LINK #' + (linkScore + 1));
+  recordConnectionMove();
   processResponse(sel.value);
 }
 
@@ -919,7 +1060,9 @@ function placeRearrange(el) {
 }
 
 function submitRearrange() {
-  addUserBox('Order: ' + rearrangeOrder.join(' → '));
+  if (busy) return;
+  addUserBox('Order: ' + rearrangeOrder.join(' -> '), 'YOU - CHAIN #' + (linkScore + 1));
+  recordConnectionMove();
   processResponse(rearrangeOrder.join(', '));
   rearrangeOrder = [];
 }
@@ -932,7 +1075,7 @@ function renderFillBlanks(container, data) {
   parts.forEach(function(part, i) {
     html += esc(part);
     if (i < blanks.length) {
-      html += '<input class="fill-blank" type="text" placeholder="' + esc(blanks[i]) + '" data-blank="' + i + '">';
+      html += '<input class="fill-blank" type="text" maxlength="28" onpaste="blockPaste(event)" placeholder="' + esc(blanks[i]) + '" data-blank="' + i + '">';
     }
   });
   html += '</div>';
@@ -941,25 +1084,29 @@ function renderFillBlanks(container, data) {
 }
 
 function submitFillBlanks() {
+  if (busy) return;
   var inputs = document.querySelectorAll('.fill-blank');
   var vals = [];
   inputs.forEach(function(inp) { vals.push(inp.value || inp.placeholder); });
-  addUserBox(vals.join(', '));
+  addUserBox(vals.join(', '), 'YOU - INSIGHT');
+  recordConnectionMove();
   processResponse(vals.join(', '));
 }
 
 function renderOpenInBox(container) {
   container.innerHTML =
     '<div style="margin-top:12px">' +
-      '<textarea class="inp-text" id="open-inbox-' + exchangeCount + '" placeholder="Your link..." rows="2" style="width:100%"></textarea>' +
+      '<textarea class="inp-text" id="open-inbox-' + exchangeCount + '" placeholder="One link..." rows="2" maxlength="140" onpaste="blockPaste(event)" style="width:100%"></textarea>' +
       '<button class="box-submit" onclick="submitOpenInBox()">Send</button>' +
     '</div>';
 }
 
 function submitOpenInBox() {
+  if (busy) return;
   var inp = document.getElementById('open-inbox-' + exchangeCount);
   if (!inp || !inp.value.trim()) return;
-  addUserBox(inp.value.trim());
+  addUserBox(inp.value.trim(), 'YOU - TEST #' + (linkScore + 1));
+  recordConnectionMove();
   processResponse(inp.value.trim());
 }
 
@@ -1002,7 +1149,7 @@ If the student asks "what is..." or asks for a definition, treat it as a topic t
 Make the student build links: clue -> guess, cause -> choice, example -> pattern, action -> impact.
 Use short, sharp language. One clue, one question, then wait.
 Connect to their curriculum ONLY if genuinely relevant - NEVER force Arduino/circuits/tech unless topic is about it.
-Respond in the output format tags: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTD:], [ITEM1:]..[ITEM4:], [SENTENCE:], [BLANK1:]..[BLANK3:].
+Respond in the output format tags: [TYPE:], [TEXT:], [QUESTION:], [NODEA:], [NODEB:], [REL1:]..[REL4:], [OPTA:]..[OPTE:], [ITEM1:]..[ITEM4:], [SENTENCE:], [BLANK1:]..[BLANK3:].
 Keep [TEXT:] under 12 words. Keep [QUESTION:] under 14 words. Keep options under 7 words each. End with one question (except final synthesis).`;
 }
 
@@ -1023,6 +1170,7 @@ async function sendInitial() {
     history.push({ role: 'assistant', content: getKaiBoxText(parsed) });
 
     addKaiBox(getKaiBoxText(parsed), parsed.type, {
+      nodes: parsed.nodes,
       options: parsed.options,
       sentence: parsed.sentence,
       blanks: parsed.blanks
@@ -1056,7 +1204,7 @@ async function callAI() {
         { role: 'system', content: buildSystemPrompt() + '\n\n' + stageInstr },
         ...trimmedHistory
       ],
-      max_tokens: 300,
+      max_tokens: 220,
       temperature: 0.7
     };
 
@@ -1088,9 +1236,9 @@ async function callAI() {
 
 function buildStageInstruction() {
   var ex = exchangeCount;
-  if (ex <= 1) return 'STAGE: SPOT. Do not define. Give one clue, then ask the student to choose a first link. Output exactly: [TYPE:quiz][TEXT:max 8 words][QUESTION:max 12 words][OPTA:clue -> guess][OPTB:example -> pattern][OPTC:problem -> response][OPTD:action -> impact]. Options must be concrete for the topic and under 7 words.';
-  if (ex <= 3) return 'STAGE: CONNECT. Make them select 2-3 links that matter. Output: [TYPE:check][TEXT:max 8 words][QUESTION:max 12 words][OPTA:...][OPTB:...][OPTC:...][OPTD:...][OPTE:...]. Each option must use "->" and stay under 7 words.';
-  if (ex <= 5) return 'STAGE: TEST. Ask one short open question that tests their link. Output: [TYPE:open][TEXT:one sentence, max 18 words, ending with a question]. No explanation.';
+  if (ex <= 1) return 'STAGE: SPOT. Make the first move a relationship choice, not an answer. Output exactly: [TYPE:link][TEXT:max 8 words][QUESTION:max 12 words][NODEA:topic clue][NODEB:real-world pattern][REL1:verb][REL2:verb][REL3:verb][REL4:verb]. Relation words under 3 words.';
+  if (ex <= 3) return 'STAGE: CONNECT. Make them select 2-3 evidence links that matter. Output: [TYPE:check][TEXT:max 8 words][QUESTION:max 12 words][OPTA:... -> ...][OPTB:... -> ...][OPTC:... -> ...][OPTD:... -> ...][OPTE:... -> ...]. Each option under 7 words.';
+  if (ex <= 5) return 'STAGE: TEST. Make them lock one stronger relationship. Output: [TYPE:link][TEXT:max 8 words][QUESTION:max 12 words][NODEA:one idea][NODEB:another idea][REL1:causes][REL2:depends on][REL3:changes][REL4:reveals].';
   if (ex <= 7) return 'STAGE: CHAIN. Give four pieces to order as a cause-to-impact chain. Output: [TYPE:rearrange][TEXT:max 8 words][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...]. Items under 5 words.';
   return 'STAGE: NAME. Let them complete the insight. Output: [TYPE:fill_blanks][SENTENCE:When ___ connects to ___, it can change ___.][BLANK1:...][BLANK2:...][BLANK3:...][TEXT:one short synthesis, max 20 words].';
 }
@@ -1099,7 +1247,7 @@ function buildStageInstruction() {
 // PARSE AI RESPONSE
 // ═══════════════════════════════════════════
 function parseAIResponse(raw) {
-  var result = { type: 'open', text: '', options: [], sentence: '', blanks: [] };
+  var result = { type: 'open', text: '', options: [], nodes: [], sentence: '', blanks: [] };
 
   // Extract type
   var typeMatch = raw.match(/\[TYPE:(\w+)\]/);
@@ -1114,6 +1262,19 @@ function parseAIResponse(raw) {
   var optMatch;
   while ((optMatch = optRegex.exec(raw)) !== null) {
     result.options.push(optMatch[2].trim());
+  }
+
+  // Extract link builder nodes and relations
+  var nodeAMatch = raw.match(/\[NODEA:([^\]]+)\]/);
+  var nodeBMatch = raw.match(/\[NODEB:([^\]]+)\]/);
+  if (nodeAMatch && nodeBMatch) {
+    result.nodes = [nodeAMatch[1].trim(), nodeBMatch[1].trim()];
+  }
+
+  var relRegex = /\[REL(\d+):([^\]]+)\]/g;
+  var relMatch;
+  while ((relMatch = relRegex.exec(raw)) !== null) {
+    result.options.push(relMatch[2].trim());
   }
 
   // Extract items for rearrange
@@ -1137,6 +1298,8 @@ function parseAIResponse(raw) {
   result.text = raw
     .replace(/\[TYPE:\w+\]\n?/g, '')
     .replace(/\[QUESTION:[^\]]+\]\n?/g, '')
+    .replace(/\[NODE[AB]:[^\]]+\]\n?/g, '')
+    .replace(/\[REL\d+:[^\]]+\]\n?/g, '')
     .replace(/\[OPT[A-E]:[^\]]+\]\n?/g, '')
     .replace(/\[ITEM\d+:[^\]]+\]\n?/g, '')
     .replace(/\[SENTENCE:[^\]]+\]\n?/g, '')
@@ -1179,14 +1342,15 @@ function getQuestionTopic() {
 
 function buildInitialFallbackResponse() {
   return {
-    type: 'quiz',
+    type: 'link',
     text: 'Start with a link.',
-    question: 'What should connect first?',
+    question: 'What connects these?',
+    nodes: [getQuestionTopic(), 'real life'],
     options: [
-      'words -> clues',
-      'examples -> pattern',
-      'problem -> response',
-      'action -> impact'
+      'shapes',
+      'solves',
+      'imagines',
+      'changes'
     ],
     sentence: '',
     blanks: []
@@ -1199,8 +1363,8 @@ function looksLikeDirectAnswer(parsed) {
 }
 
 function coerceInitialResponse(parsed) {
-  var isUsableQuiz = parsed.type === 'quiz' && parsed.question && parsed.options.length >= 4;
-  if (!isUsableQuiz || looksLikeDirectAnswer(parsed)) return buildInitialFallbackResponse();
+  var isUsableLink = parsed.type === 'link' && parsed.nodes.length >= 2 && parsed.question && parsed.options.length >= 3;
+  if (!isUsableLink || looksLikeDirectAnswer(parsed)) return buildInitialFallbackResponse();
   parsed.options = parsed.options.slice(0, 4);
   return parsed;
 }
@@ -1226,6 +1390,7 @@ async function processResponse(studentAnswer) {
     var isSynthesis = raw.includes('[FINAL]') || exchangeCount >= 8;
 
     addKaiBox(getKaiBoxText(parsed), parsed.type, {
+      nodes: parsed.nodes,
       options: parsed.options,
       sentence: parsed.sentence,
       blanks: parsed.blanks
@@ -1257,6 +1422,10 @@ function esc(s) {
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function blockPaste(e) {
+  e.preventDefault();
 }
 </script>
 </body>
