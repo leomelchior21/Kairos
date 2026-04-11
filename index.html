@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kairos</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -24,7 +24,7 @@
   --txt-dim:  rgba(150,200,175,0.35);
 }
 
-html, body { height: 100%; background: var(--bg); color: var(--txt); font-family: 'Inter', sans-serif; overflow: hidden; }
+html, body { height: 100%; background: var(--bg); color: var(--txt); font-family: 'Atkinson Hyperlegible', 'Inter', sans-serif; overflow: hidden; }
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background: radial-gradient(ellipse 120% 100% at 50% 50%, transparent 35%, rgba(0,0,0,0.6) 100%);
@@ -284,11 +284,11 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
 .bento-box.user-box .box-label { color: var(--txt-dim); }
 
 .box-content {
-  font-size: 14.5px; line-height: 1.75; color: var(--txt-mid);
+  font-size: 14.5px; line-height: 1.6; color: var(--txt-mid);
 }
 .bento-box.kai-box .box-content {
-  font-family: 'Cormorant Garamond', serif; font-style: italic;
-  font-size: 17px; color: var(--txt); line-height: 1.7;
+  font-family: 'Atkinson Hyperlegible', 'Inter', sans-serif; font-style: normal;
+  font-size: 15px; font-weight: 400; color: var(--txt); line-height: 1.6;
 }
 
 /* Quiz options inside bento box */
@@ -386,6 +386,7 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
 
 /* ═══ INPUT AREA ═══ */
 .inp-area {
+  display: none;
   flex-shrink: 0; border-top: 1px solid var(--rim); padding: 14px 22px 20px;
   background: rgba(6,11,8,0.88); backdrop-filter: blur(40px);
   position: relative; z-index: 10;
@@ -522,7 +523,7 @@ textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0
   <div class="mindmap-scroll" id="mindmap-scroll">
     <div class="mindmap-track" id="mindmap-track"></div>
   </div>
-  <div class="inp-area">
+  <div class="inp-area" aria-hidden="true">
     <div class="stage-indicator">
       <div class="stage-dot"></div>
       <span class="stage-text" id="stage-text">what do you already know?</span>
@@ -551,11 +552,11 @@ let grade = '', firstQ = '', exchangeCount = 0, busy = false;
 let history = [], pendingInput = null; // { type, ...data }
 
 const STAGES = [
-  { name: 'explore',     label: 'exploring your thoughts',      exchanges: 0 },
-  { name: 'connect',     label: 'finding patterns',              exchanges: 2 },
-  { name: 'question',    label: 'going deeper',                  exchanges: 4 },
-  { name: 'rearrange',   label: 'building understanding',        exchanges: 6 },
-  { name: 'unlock',      label: 'your answer awaits',            exchanges: 8 }
+  { name: 'explore',     label: 'spot the clue',                 exchanges: 0 },
+  { name: 'connect',     label: 'make the link',                 exchanges: 2 },
+  { name: 'question',    label: 'test the link',                 exchanges: 4 },
+  { name: 'rearrange',   label: 'build the chain',               exchanges: 6 },
+  { name: 'unlock',      label: 'name the insight',              exchanges: 8 }
 ];
 
 // ═══════════════════════════════════════════
@@ -950,7 +951,7 @@ function submitFillBlanks() {
 function renderOpenInBox(container) {
   container.innerHTML =
     '<div style="margin-top:12px">' +
-      '<textarea class="inp-text" id="open-inbox-' + exchangeCount + '" placeholder="Share your thoughts..." rows="2" style="width:100%"></textarea>' +
+      '<textarea class="inp-text" id="open-inbox-' + exchangeCount + '" placeholder="Your link..." rows="2" style="width:100%"></textarea>' +
       '<button class="box-submit" onclick="submitOpenInBox()">Send</button>' +
     '</div>';
 }
@@ -967,23 +968,7 @@ function submitOpenInBox() {
 // ═══════════════════════════════════════════
 function renderInputZone() {
   var zone = document.getElementById('input-zone');
-  var stage = getCurrentStage();
-
-  if (stage.name === 'explore' || stage.name === 'connect') {
-    zone.innerHTML =
-      '<div class="inp-row">' +
-        '<textarea class="inp-text" id="mi" placeholder="type your answer..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
-        '<button class="send-btn" onclick="sendFromInput()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
-      '</div>';
-    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
-  } else {
-    zone.innerHTML =
-      '<div class="inp-row">' +
-        '<textarea class="inp-text" id="mi" placeholder="explain your thinking..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
-        '<button class="send-btn" onclick="sendFromInput()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>' +
-      '</div>';
-    setTimeout(function() { var el = document.getElementById('mi'); if (el) el.focus(); }, 80);
-  }
+  if (zone) zone.innerHTML = '';
 }
 
 function sendFromInput() {
@@ -1014,10 +999,11 @@ function buildSystemPrompt() {
   return `You are Kai, a calm Socratic thinking guide. Student is ${grade} (${ctx[grade]||'student'}).
 Guide through progressive questioning. NEVER give answers directly. Be warm, conversational.
 If the student asks "what is..." or asks for a definition, treat it as a topic to investigate. Do NOT define it, explain it, summarize it, or answer it directly.
-Your job is to ask the next useful question, give clues, or offer choices that make the student reason.
-Connect to their curriculum ONLY if genuinely relevant — NEVER force Arduino/circuits/tech unless topic is about it.
+Make the student build links: clue -> guess, cause -> choice, example -> pattern, action -> impact.
+Use short, sharp language. One clue, one question, then wait.
+Connect to their curriculum ONLY if genuinely relevant - NEVER force Arduino/circuits/tech unless topic is about it.
 Respond in the output format tags: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTD:], [ITEM1:]..[ITEM4:], [SENTENCE:], [BLANK1:]..[BLANK3:].
-Keep responses short. End with one question (except final synthesis).`;
+Keep [TEXT:] under 12 words. Keep [QUESTION:] under 14 words. Keep options under 7 words each. End with one question (except final synthesis).`;
 }
 
 async function sendInitial() {
@@ -1102,11 +1088,11 @@ async function callAI() {
 
 function buildStageInstruction() {
   var ex = exchangeCount;
-  if (ex <= 1) return 'STAGE: exchange 1-2, QUIZ. Generate exactly ONE multiple choice question with 4 options about how to think about the topic. Do NOT define the topic or give the answer. Output exactly: [TYPE:quiz][TEXT:one short clue, not a definition][QUESTION:one reasoning question][OPTA:...][OPTB:...][OPTC:...][OPTD:...].';
-  if (ex <= 3) return 'STAGE: exchange 3-4, CHECKBOX. Ask them to select multiple relevant factors. Do NOT explain the answer. Output: [TYPE:check][TEXT:one short bridge][QUESTION:...][OPTA:...][OPTB:...][OPTC:...][OPTD:...][OPTE:...]. Or use [TYPE:open] for a deeper question.';
-  if (ex <= 5) return 'STAGE: exchange 5-6, OPEN. Ask one deeper question. Affirm what they reasoned, without revealing the full answer. Output: [TYPE:open][TEXT:2-4 sentences ending with a clear question].';
-  if (ex <= 7) return 'STAGE: exchange 7-8, REARRANGE. Give 4 concepts related to their topic. Output: [TYPE:rearrange][TEXT:1 sentence intro][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...].';
-  return 'STAGE: final synthesis. Create a fill-in-blanks sentence summarizing the key insight, then give a warm synthesis. Output: [TYPE:fill_blanks][SENTENCE:...][BLANK1:...][BLANK2:...][BLANK3:...][TEXT:3-4 sentence synthesis].';
+  if (ex <= 1) return 'STAGE: SPOT. Do not define. Give one clue, then ask the student to choose a first link. Output exactly: [TYPE:quiz][TEXT:max 8 words][QUESTION:max 12 words][OPTA:clue -> guess][OPTB:example -> pattern][OPTC:problem -> response][OPTD:action -> impact]. Options must be concrete for the topic and under 7 words.';
+  if (ex <= 3) return 'STAGE: CONNECT. Make them select 2-3 links that matter. Output: [TYPE:check][TEXT:max 8 words][QUESTION:max 12 words][OPTA:...][OPTB:...][OPTC:...][OPTD:...][OPTE:...]. Each option must use "->" and stay under 7 words.';
+  if (ex <= 5) return 'STAGE: TEST. Ask one short open question that tests their link. Output: [TYPE:open][TEXT:one sentence, max 18 words, ending with a question]. No explanation.';
+  if (ex <= 7) return 'STAGE: CHAIN. Give four pieces to order as a cause-to-impact chain. Output: [TYPE:rearrange][TEXT:max 8 words][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...]. Items under 5 words.';
+  return 'STAGE: NAME. Let them complete the insight. Output: [TYPE:fill_blanks][SENTENCE:When ___ connects to ___, it can change ___.][BLANK1:...][BLANK2:...][BLANK3:...][TEXT:one short synthesis, max 20 words].';
 }
 
 // ═══════════════════════════════════════════
@@ -1194,22 +1180,27 @@ function getQuestionTopic() {
 function buildInitialFallbackResponse() {
   return {
     type: 'quiz',
-    text: 'Let us treat "' + getQuestionTopic() + '" as a clue before we name it.',
-    question: 'Which angle would help you reason it out first?',
+    text: 'Start with a link.',
+    question: 'What should connect first?',
     options: [
-      'The words or roots in the term',
-      'Examples where it might appear',
-      'The problem it might connect to',
-      'What you already know about it'
+      'words -> clues',
+      'examples -> pattern',
+      'problem -> response',
+      'action -> impact'
     ],
     sentence: '',
     blanks: []
   };
 }
 
+function looksLikeDirectAnswer(parsed) {
+  var text = (parsed.text || '').toLowerCase();
+  return /\b(is|are|means|refers to|describes|involves)\b/.test(text) && text.indexOf('?') === -1;
+}
+
 function coerceInitialResponse(parsed) {
   var isUsableQuiz = parsed.type === 'quiz' && parsed.question && parsed.options.length >= 4;
-  if (!isUsableQuiz) return buildInitialFallbackResponse();
+  if (!isUsableQuiz || looksLikeDirectAnswer(parsed)) return buildInitialFallbackResponse();
   parsed.options = parsed.options.slice(0, 4);
   return parsed;
 }
