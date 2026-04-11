@@ -103,8 +103,8 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
 .ask-btn:active { transform: scale(0.97); }
 
 /* ═══ GRADE SCREEN ═══ */
-#screen-grade { align-items: center; justify-content: center; background: var(--bg); }
-#screen-grade::after {
+#screen-grade, #screen-term { align-items: center; justify-content: center; background: var(--bg); }
+#screen-grade::after, #screen-term::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 70% 55% at 50% 58%, rgba(26,223,128,0.06) 0%, transparent 65%);
 }
@@ -154,8 +154,9 @@ textarea.lta:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0 3px 
   text-transform: uppercase; color: var(--txt-dim); margin-bottom: 8px; text-align: center;
 }
 
-.grade-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.grade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .grade-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 16px; }
+.term-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: min(420px, 90vw); }
 
 .g-btn {
   background: var(--card); border: 1px solid var(--rim); border-radius: 14px;
@@ -528,13 +529,13 @@ textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0
   <div class="wordmark">Kairos</div>
   <div class="landing-content">
     <div class="landing-title">Kairos</div>
-    <div class="landing-sub">a thinking partner for curious minds</div>
+    <div class="landing-sub">um guia para hackear ideias</div>
     <div class="landing-box">
       <div class="landing-input-wrap">
-        <textarea class="lta" id="landing-input" placeholder="What would you like to explore?" rows="1"
+        <textarea class="lta" id="landing-input" placeholder="Que ideia voce quer explorar?" rows="1"
           onkeydown="handleLandingKey(event)" oninput="autoResize(this)"></textarea>
       </div>
-      <button class="ask-btn" onclick="goToGrade()">Begin</button>
+      <button class="ask-btn" onclick="goToGrade()">Comecar</button>
     </div>
   </div>
 </div>
@@ -549,33 +550,45 @@ textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0
       <div class="orb-ring"></div>
       <div class="orb-ring"></div>
     </div>
-    <div class="grade-q">Hey, I'm <em>Kai</em>.<br>What grade are you in?</div>
+    <div class="grade-q">Sou o <em>Kai</em>.<br>Qual e a sua serie?</div>
     <div class="grade-section">
-      <div class="grade-section-label">Middle School</div>
+      <div class="grade-section-label">Ensino Fundamental II</div>
       <div class="grade-grid">
-        <button class="g-btn" onclick="selectGrade('5th grade')"><span class="gn">5</span><span class="gl">grade</span></button>
-        <button class="g-btn" onclick="selectGrade('6th grade')"><span class="gn">6</span><span class="gl">grade</span></button>
-        <button class="g-btn" onclick="selectGrade('7th grade')"><span class="gn">7</span><span class="gl">grade</span></button>
-        <button class="g-btn" onclick="selectGrade('8th grade')"><span class="gn">8</span><span class="gl">grade</span></button>
-        <button class="g-btn" onclick="selectGrade('9th grade')"><span class="gn">9</span><span class="gl">grade</span></button>
-      </div>
-      <div class="divider"><span>High School</span></div>
-      <div class="grade-grid-3">
-        <button class="g-btn" onclick="selectGrade('1st year HS')"><span class="gn">1st</span><span class="gl">year</span></button>
-        <button class="g-btn" onclick="selectGrade('2nd year HS')"><span class="gn">2nd</span><span class="gl">year</span></button>
-        <button class="g-btn" onclick="selectGrade('3rd year HS')"><span class="gn">3rd</span><span class="gl">year</span></button>
+        <button class="g-btn" onclick="selectGrade('6º ano')"><span class="gn">6º</span><span class="gl">ano</span></button>
+        <button class="g-btn" onclick="selectGrade('7º ano')"><span class="gn">7º</span><span class="gl">ano</span></button>
+        <button class="g-btn" onclick="selectGrade('8º ano')"><span class="gn">8º</span><span class="gl">ano</span></button>
+        <button class="g-btn" onclick="selectGrade('9º ano')"><span class="gn">9º</span><span class="gl">ano</span></button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ═══ MAIN MIND MAP UI ═══ -->
+<div id="screen-term" class="screen hidden">
+  <div class="grade-wrap">
+    <div class="orb-wrap">
+      <div class="orb"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+    </div>
+    <div class="grade-q">Qual <em>bimestre</em><br>vamos hackear?</div>
+    <div class="term-grid">
+      <button class="g-btn" onclick="selectBimester('1º bimestre')"><span class="gn">1º</span><span class="gl">bimestre</span></button>
+      <button class="g-btn" onclick="selectBimester('2º bimestre')"><span class="gn">2º</span><span class="gl">bimestre</span></button>
+      <button class="g-btn" onclick="selectBimester('3º bimestre')"><span class="gn">3º</span><span class="gl">bimestre</span></button>
+      <button class="g-btn" onclick="selectBimester('4º bimestre')"><span class="gn">4º</span><span class="gl">bimestre</span></button>
+    </div>
+  </div>
+</div>
+
 <div id="screen-main" class="screen hidden">
   <div class="main-hdr">
     <div class="hdr-orb"></div>
     <div class="hdr-names">
       <div class="hdr-name">Kai</div>
-      <div class="hdr-sub">Kairos · thinking guide</div>
+      <div class="hdr-sub">Kairos · guia de pensamento</div>
     </div>
     <div class="score-pill" id="score-pill">0 links</div>
     <div class="grade-pill" id="grade-pill"></div>
@@ -600,19 +613,19 @@ textarea.inp-text:focus { border-color: rgba(26,223,128,0.35); box-shadow: 0 0 0
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
-// Auto-detect: localhost, 127.0.0.1, or file:// = local LM Studio
-var IS_LOCAL = window.location.hostname === 'localhost' 
-            || window.location.hostname === '127.0.0.1' 
-            || window.location.protocol === 'file:';
+// Use Groq API by default so Kai can read README.md on the server.
+// Add ?local=1 or open as file:// to use local LM Studio.
+var USE_LOCAL_LM = window.location.protocol === 'file:' 
+                || new URLSearchParams(window.location.search).get('local') === '1';
 
-const API_URL = IS_LOCAL
+const API_URL = USE_LOCAL_LM
   ? 'http://localhost:1234/v1/chat/completions'
   : '/api/chat';
 
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
-let grade = '', firstQ = '', exchangeCount = 0, linkScore = 0, streak = 0, busy = false;
+let grade = '', bimester = '', firstQ = '', exchangeCount = 0, linkScore = 0, streak = 0, busy = false;
 let history = [], pendingInput = null; // { type, ...data }
 
 const STAGES = [
@@ -713,12 +726,20 @@ async function goToGrade() {
 // ═══════════════════════════════════════════
 async function selectGrade(g) {
   grade = g;
-  linkScore = 0;
-  streak = 0;
   document.getElementById('grade-pill').textContent = g;
-  updateConnectionMeter();
   await transitionOut(document.getElementById('screen-grade'));
   document.getElementById('screen-grade').classList.add('hidden');
+  await transitionIn(document.getElementById('screen-term'));
+}
+
+async function selectBimester(b) {
+  bimester = b;
+  linkScore = 0;
+  streak = 0;
+  document.getElementById('grade-pill').textContent = grade + ' · ' + bimester;
+  updateConnectionMeter();
+  await transitionOut(document.getElementById('screen-term'));
+  document.getElementById('screen-term').classList.add('hidden');
   document.getElementById('screen-main').classList.remove('hidden');
   void document.getElementById('screen-main').offsetHeight;
   document.getElementById('screen-main').style.opacity = '1';
@@ -1134,16 +1155,12 @@ function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault
 // ═══════════════════════════════════════════
 function buildSystemPrompt() {
   var ctx = {
-    '5th grade':  'age 10-11, keep language simple',
-    '6th grade':  'age 11-12',
-    '7th grade':  'age 12-13, knows sustainability, climate, SDGs',
-    '8th grade':  'age 13-14, knows physics, chemistry, biology',
-    '9th grade':  'age 14-15, knows electricity, circuits, sensors',
-    '1st year HS':'age 15-16, mechanics, atomic structure, genetics',
-    '2nd year HS':'age 16-17, thermodynamics, genetics, philosophy',
-    '3rd year HS':'age 17-18, college prep, advanced topics',
+    '6º ano': 'idade 11-12, linguagem simples e concreta',
+    '7º ano': 'idade 12-13, sustentabilidade, clima, biomas e saude',
+    '8º ano': 'idade 13-14, biologia, sistemas, reproducao e saude',
+    '9º ano': 'idade 14-15, metodo cientifico, ecologia, evolucao e tecnologia',
   };
-  return `You are Kai, a calm Socratic thinking guide. Student is ${grade} (${ctx[grade]||'student'}).
+  return `Voce e Kai, guia socratico da plataforma Kairos. Estudante: ${grade}, ${bimester} (${ctx[grade]||'estudante'}).
 Guide through progressive questioning. NEVER give answers directly. Be warm, conversational.
 If the student asks "what is..." or asks for a definition, treat it as a topic to investigate. Do NOT define it, explain it, summarize it, or answer it directly.
 Make the student build links: clue -> guess, cause -> choice, example -> pattern, action -> impact.
@@ -1190,7 +1207,7 @@ async function sendInitial() {
 
 async function callAI() {
   try {
-    console.log('[Kairos] Calling API:', API_URL, IS_LOCAL ? '(local)' : '(vercel)');
+    console.log('[Kairos] Calling API:', API_URL, USE_LOCAL_LM ? '(local)' : '(server)');
 
     // Truncate history to last 6 messages to save tokens
     var trimmedHistory = history.slice(-6);
@@ -1199,7 +1216,14 @@ async function callAI() {
     var stageInstr = buildStageInstruction();
 
     var body = {
-      model: IS_LOCAL ? 'qwen2.5:7b' : 'llama-3.3-70b-versatile',
+      model: USE_LOCAL_LM ? 'qwen2.5:7b' : 'llama-3.3-70b-versatile',
+      kaiContext: {
+        grade: grade,
+        bimester: bimester,
+        firstQuestion: firstQ,
+        exchangeCount: exchangeCount,
+        stage: getCurrentStage().name
+      },
       messages: [
         { role: 'system', content: buildSystemPrompt() + '\n\n' + stageInstr },
         ...trimmedHistory
