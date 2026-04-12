@@ -47,6 +47,7 @@ O produto deve operar como motor de investigacao, nao como motor de resposta:
 - Synthesis challenge generator: exige preenchimento de lacunas antes da revelacao.
 - Final answer revealer: mostra a resposta final e cards de conexao curricular apenas depois da sintese.
 - Kai escolhe a estrategia e o tipo de interacao internamente. O estudante nunca deve escolher "qual caminho ajuda mais"; ele escolhe apenas respostas sobre o conteudo.
+- Quando a resposta do estudante indicar baixa compreensao, Kai nao deve dizer que esta errado. O sistema ajusta a rota silenciosamente com uma tarefa mais simples, uma pista concreta ou opcoes mais estreitas.
 
 Exemplos completos de fluxo estao em `docs/inquiry-example-flows.md`.
 

@@ -126,7 +126,8 @@ function createStudentState() {
     masteryLevel: 'lost',
     stepIndex: 0,
     evidence: [],
-    attempts: 0,
+    supportMode: 'normal',
+    routeAdjustments: 0,
     currentInteraction: null,
     finalUnlocked: false
   };
@@ -161,7 +162,8 @@ async function selectGrade(grade) {
   state.masteryScore = 0;
   state.masteryLevel = 'lost';
   state.evidence = [];
-  state.attempts = 0;
+  state.supportMode = 'normal';
+  state.routeAdjustments = 0;
   state.finalUnlocked = false;
   document.getElementById('mindmap-track').innerHTML = '';
   document.getElementById('question-subtitle').textContent = state.question;
@@ -204,6 +206,24 @@ function getCurrentStep() {
   return flow.steps[Math.min(state.stepIndex, flow.steps.length - 1)];
 }
 
+function getRequestStep() {
+  var step = getCurrentStep();
+  if (state.supportMode !== 'reroute') return step;
+  return {
+    id: step.id,
+    label: step.label,
+    interaction: simplifyInteraction(step.interaction),
+    goal: 'Use a simpler content angle.'
+  };
+}
+
+function simplifyInteraction(interaction) {
+  if (interaction === 'final_reveal') return interaction;
+  if (interaction === 'fill_blanks') return 'multiple_choice';
+  if (interaction === 'match' || interaction === 'sort' || interaction === 'short_answer') return 'true_false';
+  return 'multiple_choice';
+}
+
 function getMasteryLevel(score) {
   var safe = Math.max(0, Math.min(100, Number(score) || 0));
   if (safe >= 85) return 'ready_to_synthesize';
@@ -229,7 +249,7 @@ function updateMastery(result) {
 }
 
 function updateHud() {
-  var step = getCurrentStep();
+  var step = getRequestStep();
   document.getElementById('year-pill').textContent = state.year || state.grade;
   document.getElementById('type-pill').textContent = state.questionType.replace('_', ' ');
   document.getElementById('mastery-pill').textContent = state.masteryLevel.replace(/_/g, ' ');
@@ -285,7 +305,6 @@ async function requestNextInteraction() {
     var raw = await callAI(step);
     var interaction = coerceInteraction(parseAIResponse(raw), step);
     state.currentInteraction = interaction;
-    state.attempts = 0;
     chatHistory.push({ role: 'assistant', content: getKaiText(interaction) });
     addMapNode('kai', step.label, getKaiText(interaction), interaction.type === 'final_reveal' ? 'final' : '');
     renderInteraction(interaction);
@@ -481,28 +500,27 @@ function submitCurrentInteraction() {
   updateMastery(result);
   updateHud();
 
-  addMapNode('student', result.correct ? 'Evidence gained' : (result.partial ? 'Partial evidence' : 'Needs another clue'), result.summary, result.correct ? 'correct' : (result.partial ? 'partial' : 'missed'));
+  addMapNode('student', getEvidenceTitle(result), result.summary, result.correct ? 'correct' : 'partial');
   chatHistory.push({ role: 'user', content: result.summary });
 
-  if (!result.correct && !result.partial && state.attempts < 1) {
-    state.attempts += 1;
-    showFeedback('Try again. Hint: ' + (state.currentInteraction.hint || 'Look for the clue that fits the question.'), 'miss');
-    markSelectedMiss();
-    return;
-  }
-
   if (result.correct) {
-    showFeedback('Good. You added usable evidence.', 'good');
+    showFeedback('Nice. Kai is building the next step.', 'good');
   } else if (result.partial) {
-    showFeedback('Close enough to keep building. Kai will narrow the next step.', 'warn');
+    showFeedback('Kai will use a narrower next step.', 'warn');
   } else {
-    showFeedback('We will reframe it with fewer words.', 'warn');
+    showFeedback('Kai is changing the route.', 'warn');
   }
 
   setTimeout(function() {
     advanceFlow(result);
     requestNextInteraction();
   }, 520);
+}
+
+function getEvidenceTitle(result) {
+  if (result.correct) return 'Evidence gained';
+  if (result.partial) return 'Useful clue';
+  return 'New angle';
 }
 
 function collectStudentAnswer(interaction) {
@@ -587,18 +605,22 @@ function showFeedback(message, tone) {
   feedback.textContent = message;
 }
 
-function markSelectedMiss() {
-  var selected = document.querySelector('.choice-btn.selected');
-  if (selected) {
-    selected.classList.remove('selected');
-    selected.classList.add('disabled');
-    enableSubmit(false);
-  }
-}
-
 function advanceFlow(result) {
   var flow = getInquiryFlow(state.questionType);
   var step = getCurrentStep();
+
+  if (!result.correct && !result.partial) {
+    state.supportMode = 'reroute';
+    state.routeAdjustments += 1;
+    return;
+  }
+
+  if (result.partial) {
+    state.supportMode = 'reroute';
+  } else {
+    state.supportMode = 'normal';
+  }
+
   if (step.id === 'synthesis_challenge' && (result.correct || state.masteryScore >= 74)) {
     state.finalUnlocked = true;
     state.stepIndex = flow.steps.length - 1;
@@ -621,6 +643,8 @@ async function callAI(step) {
       questionType: state.questionType,
       masteryScore: state.masteryScore,
       masteryLevel: state.masteryLevel,
+      supportMode: state.supportMode,
+      routeAdjustments: state.routeAdjustments,
       stepIndex: state.stepIndex,
       learningStep: step.id,
       preferredInteraction: step.interaction,
@@ -655,10 +679,11 @@ function buildLocalSystemPrompt(step) {
     'Do not answer immediately. Guide with one short interaction.',
     'Kai chooses the scaffold. Never ask the student which path, lens, move, activity, or interaction helps most.',
     'All visible choices must be about the student topic itself: meanings, examples, causes, evidence, steps, claims, or actions.',
+    'If support mode is reroute, silently change tactics. Avoid negative labels and do not ask for the same task again.',
     'Final answers are allowed only at final_reveal.',
     'Use these tags only: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTE:], [ANSWER:], [HINT:], [PAIR1:]..[PAIR4:], [ITEM1:]..[ITEM5:], [ORDER:], [SENTENCE:], [BLANK1:]..[BLANK4:], [FINAL:], [CONNECTION1:]..[CONNECTION4:].',
     'Current step: ' + step.id + '. Preferred interaction: ' + step.interaction + '.',
-    'Question type: ' + state.questionType + '. Mastery: ' + state.masteryLevel + '.'
+    'Question type: ' + state.questionType + '. Mastery: ' + state.masteryLevel + '. Support mode: ' + state.supportMode + '.'
   ].join('\n');
 }
 

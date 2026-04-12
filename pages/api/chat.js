@@ -37,7 +37,7 @@ function buildInteractionRule({ step, masteryLevel, questionType, firstQuestion 
   ];
 
   const simplify = masteryLevel === 'lost' || masteryLevel === 'emerging'
-    ? 'Use very short words, concrete clues, and closed choices. If the last answer was weak, reframe instead of saying incorrect.'
+    ? 'Use very short words, concrete clues, and closed choices. If the last answer was weak, reframe without any negative label.'
     : 'Allow one small inference, but still keep the task short.';
 
   const contentGuard = [
@@ -84,11 +84,15 @@ function buildKaiPrompt(readmeContext, csvCards, kaiContext = {}) {
   const questionType = kaiContext.questionType || classifyQuestion(firstQuestion);
   const masteryScore = Number(kaiContext.masteryScore || 0);
   const masteryLevel = kaiContext.masteryLevel || getMasteryLevel(masteryScore);
+  const supportMode = kaiContext.supportMode || 'normal';
+  const routeAdjustments = Number(kaiContext.routeAdjustments || 0);
   const stepIndex = Number(kaiContext.stepIndex || 0);
   const flow = getInquiryFlow(questionType);
   const step = kaiContext.learningStep
     ? flow.steps.find((candidate) => candidate.id === kaiContext.learningStep) || getLearningStep(questionType, stepIndex)
     : getLearningStep(questionType, stepIndex);
+  const preferredInteraction = kaiContext.preferredInteraction || step.interaction;
+  const effectiveStep = { ...step, interaction: preferredInteraction };
   const languageProfile = getLanguageProfile(grade);
 
   return `Voce e Kai, o Guia de Pensamento da plataforma Kairos.
@@ -106,6 +110,8 @@ Contexto do estudante:
 - Tipo de pergunta: ${questionType}
 - Mastery score: ${masteryScore}
 - Mastery level: ${masteryLevel}
+- Support mode: ${supportMode}
+- Route adjustments: ${routeAdjustments}
 - Perfil de linguagem: ${languageProfile}
 
 Codigo de etica:
@@ -114,7 +120,8 @@ Codigo de etica:
 - Use diagnostico invisivel: lost, emerging, developing, secure, ready_to_synthesize.
 - If understanding is weak, reduce text, simplify vocabulary, give a hint, and use closed interactions.
 - If understanding is stronger, ask for inference or synthesis.
-- Wrong answers should trigger a hint, narrowed options, or a reframe. Do not shame the student.
+- If the last answer shows weak evidence, silently change tactics. Avoid all negative labels and do not ask the student to repeat the same task.
+- Weak evidence should trigger a simpler route: a concrete example, a narrower true/false claim, or fewer content choices.
 - Prefer low-language-load interactions: multiple choice, tap choice, true/false, match, sort, fill blanks, very short answer.
 - Open-ended writing is optional and should appear later.
 - Kai escolhe a interacao e a estrategia. O estudante so escolhe respostas sobre o conteudo.
@@ -137,7 +144,9 @@ Formato obrigatorio:
 - [ANSWER:] and [BLANK:] are hidden validation data. Do not mention them in [TEXT:].
 - [FINAL:] must be empty unless TYPE is final_reveal.
 
-${buildInteractionRule({ step, masteryLevel, questionType, firstQuestion })}
+${supportMode === 'reroute' ? 'ROUTE ADJUSTMENT: The previous answer was weak or partial. Do not mention that. Create a simpler content task and continue calmly.' : ''}
+
+${buildInteractionRule({ step: effectiveStep, masteryLevel, questionType, firstQuestion })}
 
 CSV connection cards for final reveal:
 ${formatConnectionCards(csvCards)}
