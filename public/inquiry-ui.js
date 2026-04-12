@@ -2,6 +2,8 @@ var USE_LOCAL_LM = window.location.protocol === 'file:' ||
   new URLSearchParams(window.location.search).get('local') === '1';
 var API_URL = USE_LOCAL_LM ? 'http://localhost:1234/v1/chat/completions' : '/api/chat';
 
+initLandingCanvas();
+
 /**
  * @typedef {'concept'|'fact'|'mechanism'|'comparison'|'problem_solution'} QuestionType
  * @typedef {'multiple_choice'|'tap_choice'|'true_false'|'match'|'sort'|'fill_blanks'|'short_answer'|'final_reveal'} InteractionType
@@ -58,6 +60,61 @@ var state = createStudentState();
 var history = [];
 var busy = false;
 var sortOrder = [];
+
+function initLandingCanvas() {
+  var canvas = document.getElementById('kai-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var width = 0;
+  var height = 0;
+  var tick = 0;
+
+  var blobs = [
+    { ox: 0.50, oy: 0.46, r: 0.50, sx: 0.08, sy: 0.07, ph: 0.0, c0: [190,255,165], c1: [24,219,123], c2: [0,130,70], c3: [0,45,22] },
+    { ox: 0.38, oy: 0.55, r: 0.36, sx: 0.11, sy: 0.10, ph: 2.0, c0: [24,219,123], c1: [0,110,55], c2: [0,65,30], c3: [0,18,8] },
+    { ox: 0.62, oy: 0.40, r: 0.28, sx: 0.13, sy: 0.09, ph: 4.0, c0: [170,255,170], c1: [20,190,95], c2: [0,90,45], c3: [0,28,14] }
+  ];
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+
+  function draw() {
+    tick += 0.0035;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#07100d';
+    ctx.fillRect(0, 0, width, height);
+
+    blobs.forEach(function(blob) {
+      var cx = width * (blob.ox + Math.sin(tick * 0.55 + blob.ph) * blob.sx);
+      var cy = height * (blob.oy + Math.cos(tick * 0.45 + blob.ph) * blob.sy);
+      var rx = width * (blob.r + Math.sin(tick + blob.ph) * 0.022);
+      var ry = height * (blob.r * 0.82 + Math.cos(tick * 1.05 + blob.ph) * 0.020);
+      var gradient = ctx.createRadialGradient(cx - rx * 0.12, cy - ry * 0.18, 0, cx, cy, Math.max(rx, ry));
+      gradient.addColorStop(0, 'rgba(' + blob.c0.join(',') + ',0.88)');
+      gradient.addColorStop(0.22, 'rgba(' + blob.c1.join(',') + ',0.65)');
+      gradient.addColorStop(0.55, 'rgba(' + blob.c2.join(',') + ',0.30)');
+      gradient.addColorStop(1, 'rgba(' + blob.c3.join(',') + ',0)');
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(1, ry / rx);
+      ctx.beginPath();
+      ctx.arc(0, 0, rx, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      ctx.restore();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  draw();
+}
+
 
 function createStudentState() {
   return {

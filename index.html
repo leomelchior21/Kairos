@@ -4,24 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kairos Inquiry</title>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/inquiry.css">
 </head>
 <body>
-<div id="screen-landing" class="screen intro-screen">
-  <section class="intro-card">
-    <div class="brand-row">
-      <div>
-        <div class="brand-name">Kairos</div>
-        <div class="brand-sub">inquiry engine</div>
+<div id="screen-landing" class="screen landing-screen">
+  <canvas id="kai-canvas"></canvas>
+  <div class="wordmark">Kairos</div>
+  <section class="landing-content">
+    <div class="landing-title">Kairos</div>
+    <div class="landing-sub">um guia para hackear ideias</div>
+    <div class="landing-box">
+      <div class="landing-input-wrap">
+        <textarea class="landing-input" id="landing-input" placeholder="Que ideia voce quer explorar?" rows="1" onkeydown="handleLandingKey(event)" oninput="autoResize(this)"></textarea>
       </div>
-      <div class="mission-pill">Earn the answer</div>
-    </div>
-    <h1 class="intro-title">Bring one idea. Kai turns it into a thinking path.</h1>
-    <p class="intro-copy">No answer dump. You will choose, test, match, sort, and unlock a final synthesis.</p>
-    <textarea class="idea-input" id="landing-input" placeholder="What do you want to explore?" rows="3" onkeydown="handleLandingKey(event)" oninput="autoResize(this)"></textarea>
-    <div class="intro-actions">
-      <button class="primary-btn" onclick="goToGrade()">Start path</button>
+      <button class="ask-btn" onclick="goToGrade()">Comecar</button>
     </div>
   </section>
 </div>
