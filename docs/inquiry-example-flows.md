@@ -18,17 +18,20 @@ Common misconceptions:
 - Solarpunk is just fantasy with no real-world action.
 
 Sequence of steps:
-1. Hook, multiple choice: "Which clue fits solarpunk best?" Options compare future, gadget, weather, or random style.
-2. Prior knowledge, true/false: "Solarpunk combines nature and technology."
-3. Guided discovery, match: Match "green roofs", "solar panels", and "community gardens" to the ideas they support.
-4. Checkpoint, multiple choice: Pick the strongest reason solarpunk is more than decoration.
-5. Synthesis challenge, fill in the blanks: "Solarpunk imagines a ___ future where ___ and ___ work together."
-6. Final reveal: Confirm the definition.
+1. Identify kind, multiple choice: recognize solarpunk as a movement/design idea, not one object.
+2. Core features, tap choice: choose sustainability, community, nature, and technology as essential traits.
+3. Examples and limits, match: match green roofs, solar panels, and community gardens to the ideas they support.
+4. Misconception check, true/false: test whether solarpunk is only about solar panels.
+5. Relationships, multiple choice: connect solarpunk to climate, cities, imagination, and better design.
+6. Application, multiple choice: choose a real school or city action that fits solarpunk.
+7. Tiny explanation, short answer: name the central idea in five words or less.
+8. Synthesis challenge, fill in the blanks: "Solarpunk imagines a ___ future where ___ and ___ work together."
+9. Final reveal: Confirm the definition.
 
 Mastery updates:
-- Correct hook: lost -> emerging
-- Correct true/false: emerging -> developing
-- Correct match/checkpoint: developing -> secure
+- Correct kind/features: lost -> emerging
+- Correct examples/misconception: emerging -> developing
+- Correct relationship/application: developing -> secure
 - Completed synthesis: secure -> ready_to_synthesize
 
 Final fill-in-the-blank challenge:
@@ -53,17 +56,19 @@ Common misconceptions:
 - Base-to-peak and above-sea-level measurements always give the same result.
 
 Sequence of steps:
-1. Hook, multiple choice: "Which measurement clue matters?" Options include height rule, color, country size, or age.
-2. Prior knowledge, true/false: "A measurement rule changes the answer."
-3. Guided discovery, multiple choice: Choose "height above sea level" as the deciding evidence.
-4. Checkpoint, short answer: "Name the measurement clue in five words or less."
-5. Synthesis challenge, fill in the blanks: "Using height above ___, the tallest mountain is ___."
-6. Final reveal: Confirm the fact and mention the measurement caveat.
+1. Clarify target, multiple choice: identify that the question asks for a measurement-based name.
+2. Criterion, multiple choice: choose height above sea level as the standard rule.
+3. Candidate check, tap choice: compare Everest with plausible distractors.
+4. Evidence check, true/false: test whether measurement rule changes the answer.
+5. Boundary case, multiple choice: notice the base-to-peak caveat.
+6. Tiny evidence, short answer: name the measurement clue in five words or less.
+7. Synthesis challenge, fill in the blanks: "Using height above ___, the tallest mountain is ___."
+8. Final reveal: Confirm the fact and mention the measurement caveat.
 
 Mastery updates:
-- Correct hook: lost -> emerging
-- Correct true/false: emerging -> developing
-- Correct evidence choice: developing -> secure
+- Correct target/criterion: lost -> emerging
+- Correct candidate/evidence: emerging -> developing
+- Correct boundary/evidence phrase: developing -> secure
 - Completed synthesis: secure -> ready_to_synthesize
 
 Final fill-in-the-blank challenge:
@@ -90,17 +95,20 @@ Common misconceptions:
 - Only soldiers were involved.
 
 Sequence of steps:
-1. Hook, multiple choice: "Which Cold War clue fits?" Options include rivalry, weather, one battle, or sports.
-2. Prior knowledge, true/false: "The Cold War had tension without direct superpower war."
-3. Guided discovery, match: Match "USA", "Soviet Union", and "proxy wars" to their roles.
-4. Checkpoint, multiple choice: Pick the clearest description of the conflict.
-5. Synthesis challenge, fill in the blanks: "The Cold War was a ___ conflict between the ___ and the ___."
-6. Final reveal: Confirm the historical explanation.
+1. Identify kind, multiple choice: recognize the Cold War as a long rivalry, not weather or one battle.
+2. Core features, tap choice: choose ideology, power, alliances, and nuclear tension as key traits.
+3. Examples and limits, match: match USA, USSR, proxy wars, arms race, and alliances to their roles.
+4. Misconception check, true/false: test whether "cold" means no direct superpower battlefield war.
+5. Relationships, multiple choice: connect the rivalry to post-World War II world politics.
+6. Application, multiple choice: identify a Cold War example such as proxy conflict or arms race.
+7. Tiny explanation, short answer: name the central conflict in five words or less.
+8. Synthesis challenge, fill in the blanks: "The Cold War was a ___ conflict between the ___ and the ___."
+9. Final reveal: Confirm the historical explanation.
 
 Mastery updates:
-- Correct hook: lost -> emerging
-- Correct true/false: emerging -> developing
-- Correct match/checkpoint: developing -> secure
+- Correct kind/features: lost -> emerging
+- Correct examples/misconception: emerging -> developing
+- Correct relationship/application: developing -> secure
 - Completed synthesis: secure -> ready_to_synthesize
 
 Final fill-in-the-blank challenge:

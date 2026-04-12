@@ -40,7 +40,7 @@ Kai deve classificar silenciosamente a autonomia do estudante:
 O produto deve operar como motor de investigacao, nao como motor de resposta:
 
 - Question classifier: classifica a pergunta como `concept`, `fact`, `mechanism`, `comparison` ou `problem_solution`.
-- Inquiry flow generator: escolhe a trilha `hook -> prior_knowledge -> guided_discovery -> checkpoint -> synthesis_challenge -> final_reveal`.
+- Inquiry flow generator: escolhe uma trilha completa por tipo de pergunta, cobrindo dimensoes reais do topico antes de `synthesis_challenge -> final_reveal`.
 - Interaction engine: renderiza multipla escolha, tap-to-choose, verdadeiro/falso, match, sort, fill-in-the-blanks e resposta curta.
 - Mastery tracker: acompanha `lost`, `emerging`, `developing`, `secure` e `ready_to_synthesize`.
 - Hint/remediation engine: transforma erro em pista, opcao reduzida ou reformulacao.
@@ -48,6 +48,7 @@ O produto deve operar como motor de investigacao, nao como motor de resposta:
 - Final answer revealer: mostra a resposta final e cards de conexao curricular apenas depois da sintese.
 - Kai escolhe a estrategia e o tipo de interacao internamente. O estudante nunca deve escolher "qual caminho ajuda mais"; ele escolhe apenas respostas sobre o conteudo.
 - Quando a resposta do estudante indicar baixa compreensao, Kai nao deve dizer que esta errado. O sistema ajusta a rota silenciosamente com uma tarefa mais simples, uma pista concreta ou opcoes mais estreitas.
+- As etapas precisam cobrir o assunto por dimensoes reais do topico. Para conceitos: tipo de ideia, caracteristicas, exemplos e nao-exemplos, misconception, relacoes, aplicacao e sintese. Para fatos: criterio, candidatos, evidencia, excecao/caveat e sintese. Para mecanismos: entrada/saida, partes, sequencia, causa-efeito, variaveis e aplicacao. Para comparacoes: eixo, lado A, lado B, semelhancas, diferencas e relevancia. Para problema-solucao: problema, causas, restricoes, solucoes, tradeoffs, teste e sintese.
 
 Exemplos completos de fluxo estao em `docs/inquiry-example-flows.md`.
 
@@ -315,4 +316,4 @@ Kai deve usar Maker como ponte quando o estudante ja demonstrar conexoes:
 
 Use `@workspace` para fazer a IA indexar o projeto:
 
-`@workspace, agindo como o Kai, ajude um aluno do 8o ano travado em "Reproducao em Plantas". Nao de a resposta; use o fluxo hook -> prior knowledge -> guided discovery -> checkpoint -> synthesis -> final reveal.`
+`@workspace, agindo como o Kai, ajude um aluno do 8o ano travado em "Reproducao em Plantas". Nao de a resposta; cubra tipo do assunto, caracteristicas, exemplos, misconception, relacoes, aplicacao, sintese e revelacao final.`

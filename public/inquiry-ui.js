@@ -8,51 +8,62 @@ initLandingCanvas();
  * @typedef {'concept'|'fact'|'mechanism'|'comparison'|'problem_solution'} QuestionType
  * @typedef {'multiple_choice'|'tap_choice'|'true_false'|'match'|'sort'|'fill_blanks'|'short_answer'|'final_reveal'} InteractionType
  * @typedef {'lost'|'emerging'|'developing'|'secure'|'ready_to_synthesize'} MasteryLevel
- * @typedef {{id:string,label:string,interaction:InteractionType,goal:string}} LearningStep
+ * @typedef {{id:string,label:string,interaction:InteractionType,goal:string,coverage:string}} LearningStep
  * @typedef {{questionType:QuestionType,steps:LearningStep[]}} InquiryFlow
  * @typedef {{grade:string,year:string,question:string,questionType:QuestionType,masteryScore:number,masteryLevel:MasteryLevel,stepIndex:number,evidence:Array}} StudentState
  */
 
 var FLOW_LIBRARY = {
   concept: [
-    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Notice one content clue.' },
-    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one topic claim.' },
-    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match topic examples.' },
-    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the strongest meaning.' },
-    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the topic sentence.' },
-    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Confirm the earned answer.' }
+    { id: 'identify_kind', label: 'What kind of idea?', interaction: 'multiple_choice', goal: 'Classify what the topic is.', coverage: 'Decide whether the topic is a movement, object, process, event, place, value, or system.' },
+    { id: 'core_features', label: 'Core features', interaction: 'tap_choice', goal: 'Find essential traits.', coverage: 'Identify the traits that must be present for the concept to count.' },
+    { id: 'examples_boundary', label: 'Examples and limits', interaction: 'match', goal: 'Separate examples from lookalikes.', coverage: 'Use examples and nonexamples to define the boundary of the concept.' },
+    { id: 'misconception_check', label: 'Misconception check', interaction: 'true_false', goal: 'Test a common confusion.', coverage: 'Address one likely misconception without giving a lecture.' },
+    { id: 'relationships', label: 'Why it matters', interaction: 'multiple_choice', goal: 'Connect the idea to impact.', coverage: 'Connect the concept to cause, purpose, consequence, or real-world context.' },
+    { id: 'application', label: 'Use it somewhere', interaction: 'multiple_choice', goal: 'Apply the concept.', coverage: 'Apply the concept in a concrete school, maker, social, environmental, or daily-life situation.' },
+    { id: 'micro_synthesis', label: 'Tiny explanation', interaction: 'short_answer', goal: 'Say the idea briefly.', coverage: 'Ask for a five-word-or-less content phrase that shows the student can name the central idea.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the topic sentence.', coverage: 'Make a final sentence that includes the concept type, core traits, and impact.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Confirm the earned answer.', coverage: 'Reveal the concise answer and connect it to the student year.' }
   ],
   fact: [
-    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Choose the content criterion.' },
-    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one evidence claim.' },
-    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'multiple_choice', goal: 'Choose content evidence.' },
-    { id: 'checkpoint', label: 'Checkpoint', interaction: 'short_answer', goal: 'Say the evidence.' },
-    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the fact.' },
-    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the answer.' }
+    { id: 'clarify_target', label: 'What fact is needed?', interaction: 'multiple_choice', goal: 'Identify the exact fact target.', coverage: 'Clarify whether the question asks for a name, number, place, date, person, measurement, or category.' },
+    { id: 'criterion', label: 'Criterion', interaction: 'multiple_choice', goal: 'Choose the deciding rule.', coverage: 'Identify the rule or criterion that makes the fact valid.' },
+    { id: 'candidate_check', label: 'Candidate check', interaction: 'tap_choice', goal: 'Compare possible answers.', coverage: 'Look at plausible candidates and distractors before revealing the fact.' },
+    { id: 'evidence_check', label: 'Evidence check', interaction: 'true_false', goal: 'Test one evidence claim.', coverage: 'Check what evidence supports the fact.' },
+    { id: 'boundary_case', label: 'Boundary case', interaction: 'multiple_choice', goal: 'Notice a caveat.', coverage: 'Handle a common exception, measurement caveat, or ambiguity.' },
+    { id: 'micro_synthesis', label: 'Tiny evidence', interaction: 'short_answer', goal: 'Name the evidence.', coverage: 'Ask for a short phrase naming the criterion or evidence.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the factual sentence.', coverage: 'Make a final sentence with the criterion, answer, and evidence.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the answer.', coverage: 'Reveal the fact plus the criterion that makes it true.' }
   ],
   mechanism: [
-    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Spot input and output.' },
-    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one claim.' },
-    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'sort', goal: 'Order the steps.' },
-    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the cause.' },
-    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the mechanism.' },
-    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the explanation.' }
+    { id: 'input_output', label: 'Input and output', interaction: 'multiple_choice', goal: 'Find what enters and leaves.', coverage: 'Identify the starting input and final output of the mechanism.' },
+    { id: 'parts_roles', label: 'Parts and roles', interaction: 'match', goal: 'Match parts to jobs.', coverage: 'Name important parts and what each part does.' },
+    { id: 'sequence', label: 'Order the process', interaction: 'sort', goal: 'Put steps in order.', coverage: 'Order the mechanism from first action to result.' },
+    { id: 'cause_effect', label: 'Cause and effect', interaction: 'true_false', goal: 'Test the causal link.', coverage: 'Check the cause-effect relationship that makes the mechanism work.' },
+    { id: 'variable_change', label: 'What changes?', interaction: 'multiple_choice', goal: 'Spot a variable.', coverage: 'Identify what changes if one input, part, or condition changes.' },
+    { id: 'application', label: 'Use the model', interaction: 'multiple_choice', goal: 'Apply the mechanism.', coverage: 'Apply the mechanism to a concrete example or maker analogy.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the mechanism sentence.', coverage: 'Make a final sentence with input, process, and output.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the explanation.', coverage: 'Reveal the full mechanism in a concise sequence.' }
   ],
   comparison: [
-    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose a content feature.' },
-    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one contrast.' },
-    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match traits.' },
-    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the clearest difference.' },
-    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the comparison.' },
-    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the comparison.' }
+    { id: 'comparison_axis', label: 'Comparison axis', interaction: 'tap_choice', goal: 'Choose the shared feature.', coverage: 'Choose a fair feature or criterion for comparing both sides.' },
+    { id: 'side_a', label: 'First side', interaction: 'multiple_choice', goal: 'Identify side A.', coverage: 'Identify a key trait, purpose, or role of the first item.' },
+    { id: 'side_b', label: 'Second side', interaction: 'multiple_choice', goal: 'Identify side B.', coverage: 'Identify a key trait, purpose, or role of the second item.' },
+    { id: 'shared_traits', label: 'Similarities', interaction: 'true_false', goal: 'Test one similarity.', coverage: 'Check what both sides share.' },
+    { id: 'differences', label: 'Differences', interaction: 'match', goal: 'Match traits to sides.', coverage: 'Match distinctive traits to the correct side.' },
+    { id: 'why_difference_matters', label: 'Why it matters', interaction: 'multiple_choice', goal: 'Explain the importance.', coverage: 'Connect the contrast to meaning, impact, use, or consequence.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the comparison sentence.', coverage: 'Make a final sentence with axis, similarity, and difference.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the comparison.', coverage: 'Reveal a concise comparison organized by the chosen axis.' }
   ],
   problem_solution: [
-    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose the content problem.' },
-    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one cause.' },
-    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match cause to action.' },
-    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Choose a testable step.' },
-    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the solution.' },
-    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the pattern.' }
+    { id: 'define_problem', label: 'Define the problem', interaction: 'tap_choice', goal: 'Name what must change.', coverage: 'Identify the central problem, harm, or need.' },
+    { id: 'causes', label: 'Causes', interaction: 'match', goal: 'Match causes to effects.', coverage: 'Connect causes to visible effects or symptoms.' },
+    { id: 'constraints', label: 'Constraints', interaction: 'true_false', goal: 'Test one limit.', coverage: 'Recognize a limit such as cost, time, safety, fairness, materials, or environment.' },
+    { id: 'solution_options', label: 'Possible solutions', interaction: 'multiple_choice', goal: 'Choose a fitting action.', coverage: 'Compare possible actions that could address the cause.' },
+    { id: 'tradeoffs', label: 'Tradeoffs', interaction: 'match', goal: 'Match action to tradeoff.', coverage: 'Connect solution options to benefits and tradeoffs.' },
+    { id: 'test_plan', label: 'Test plan', interaction: 'sort', goal: 'Order a simple test.', coverage: 'Order a small investigation or prototype test.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the solution sentence.', coverage: 'Make a final sentence with problem, cause, action, and expected result.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the pattern.', coverage: 'Reveal a concise problem-solution explanation.' }
   ]
 };
 
@@ -213,7 +224,8 @@ function getRequestStep() {
     id: step.id,
     label: step.label,
     interaction: simplifyInteraction(step.interaction),
-    goal: 'Use a simpler content angle.'
+    goal: 'Use a simpler content angle.',
+    coverage: step.coverage
   };
 }
 
@@ -261,8 +273,10 @@ function updateHud() {
 
 function buildProgressBar() {
   var bar = document.getElementById('progress-bar');
+  var steps = getInquiryFlow(state.questionType).steps;
   bar.innerHTML = '';
-  getInquiryFlow(state.questionType).steps.forEach(function() {
+  bar.style.gridTemplateColumns = 'repeat(' + steps.length + ', 1fr)';
+  steps.forEach(function() {
     var seg = document.createElement('div');
     seg.className = 'progress-seg';
     bar.appendChild(seg);
@@ -612,6 +626,7 @@ function advanceFlow(result) {
   if (!result.correct && !result.partial) {
     state.supportMode = 'reroute';
     state.routeAdjustments += 1;
+    state.stepIndex = Math.min(state.stepIndex + 1, flow.steps.length - 2);
     return;
   }
 
@@ -624,10 +639,6 @@ function advanceFlow(result) {
   if (step.id === 'synthesis_challenge' && (result.correct || state.masteryScore >= 74)) {
     state.finalUnlocked = true;
     state.stepIndex = flow.steps.length - 1;
-    return;
-  }
-  if (state.masteryScore >= 85 && state.stepIndex < flow.steps.length - 2) {
-    state.stepIndex = flow.steps.length - 2;
     return;
   }
   state.stepIndex = Math.min(state.stepIndex + 1, flow.steps.length - 2);
@@ -683,6 +694,7 @@ function buildLocalSystemPrompt(step) {
     'Final answers are allowed only at final_reveal.',
     'Use these tags only: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTE:], [ANSWER:], [HINT:], [PAIR1:]..[PAIR4:], [ITEM1:]..[ITEM5:], [ORDER:], [SENTENCE:], [BLANK1:]..[BLANK4:], [FINAL:], [CONNECTION1:]..[CONNECTION4:].',
     'Current step: ' + step.id + '. Preferred interaction: ' + step.interaction + '.',
+    'Coverage focus: ' + (step.coverage || step.goal) + '.',
     'Question type: ' + state.questionType + '. Mastery: ' + state.masteryLevel + '. Support mode: ' + state.supportMode + '.'
   ].join('\n');
 }

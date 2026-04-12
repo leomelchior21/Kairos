@@ -34,6 +34,7 @@ function buildInteractionRule({ step, masteryLevel, questionType, firstQuestion 
     `Mastery level: ${masteryLevel}.`,
     `Student topic: ${firstQuestion}.`,
     `Goal: ${step.goal}.`,
+    `Coverage focus: ${step.coverage || step.goal}.`,
   ];
 
   const simplify = masteryLevel === 'lost' || masteryLevel === 'emerging'
@@ -47,14 +48,7 @@ function buildInteractionRule({ step, masteryLevel, questionType, firstQuestion 
     'Never copy schema words into the response. Invalid visible text includes: "max 10 words", "content question", "topic option", "one content clue", "expected word", or "meaning/example".',
   ].join('\n');
 
-  const stepGuidance = {
-    hook: 'Create a content hook. Ask the student to identify a concrete clue inside the topic, not the learning strategy.',
-    prior_knowledge: 'Create one short content claim about the topic for true/false.',
-    guided_discovery: 'Use topic words, examples, causes, actors, or process parts.',
-    checkpoint: 'Ask for the strongest content meaning, evidence, cause, contrast, or action.',
-    synthesis_challenge: 'Use the exact concepts discovered in this topic. The blanks are content words.',
-    final_reveal: 'Now reveal the concise answer and add curriculum connection cards if relevant.',
-  };
+  const stepGuidance = getStepGuidance(step);
 
   const typeRules = {
     multiple_choice: 'Use tag names TYPE, TEXT, QUESTION, OPTA, OPTB, OPTC, OPTD, ANSWER, HINT. TYPE must be multiple_choice. Fill every other tag with real topic content.',
@@ -67,7 +61,29 @@ function buildInteractionRule({ step, masteryLevel, questionType, firstQuestion 
     final_reveal: 'Use tag names TYPE, TEXT, FINAL, CONNECTION1, CONNECTION2. TYPE must be final_reveal. FINAL is the concise answer. Each connection uses real title|discipline|reason.',
   };
 
-  return [...base, simplify, contentGuard, stepGuidance[step.id], typeRules[step.interaction]].join('\n');
+  return [...base, simplify, contentGuard, stepGuidance, typeRules[step.interaction]].join('\n');
+}
+
+function getStepGuidance(step) {
+  if (step.id === 'synthesis_challenge') {
+    return 'This is the synthesis gate. The sentence must combine the most important content pieces from previous steps, not introduce a new topic.';
+  }
+  if (step.id === 'final_reveal') {
+    return 'Now reveal the concise answer. Mention why it fits the evidence the student built.';
+  }
+  if (step.id.includes('misconception') || step.id.includes('boundary')) {
+    return 'Target a likely misconception or boundary case about the exact topic.';
+  }
+  if (step.id.includes('example') || step.id.includes('candidate') || step.id.includes('side')) {
+    return 'Use concrete content examples. Avoid abstract strategy language.';
+  }
+  if (step.id.includes('sequence') || step.id.includes('test_plan')) {
+    return 'Make the order reflect a real process inside the topic.';
+  }
+  if (step.id.includes('application') || step.id.includes('solution') || step.id.includes('tradeoff')) {
+    return 'Connect the topic to a real use, consequence, project, or decision.';
+  }
+  return 'Cover this exact content dimension of the topic before moving on.';
 }
 
 function formatConnectionCards(cards = []) {
@@ -100,7 +116,7 @@ function buildKaiPrompt(readmeContext, csvCards, kaiContext = {}) {
 Core identity:
 - You are an inquiry engine, not an answer engine.
 - Never answer immediately.
-- Build a scaffolded path: hook -> prior knowledge -> guided discovery -> checkpoints -> synthesis challenge -> final reveal.
+- Build a complete topic path. Cover the topic through identity/criterion, core traits or parts, examples or evidence, misconceptions or boundaries, relationships or consequences, application, synthesis challenge, and final reveal.
 - The final answer is allowed only when the requested learning step is final_reveal.
 
 Contexto do estudante:
@@ -128,6 +144,8 @@ Codigo de etica:
 - Nunca pergunte qual caminho, movimento, lente, estrategia ou tipo de interacao ajuda mais.
 - Linguagem curta, inspiradora e tecnica na medida certa.
 - Referencias permitidas quando relevantes: sensores, circuitos, biomimetica, prototipos, ODS, cidades sustentaveis.
+- Every step must teach the exact topic the student brought. Do not ask generic metacognitive questions when a content-specific question is possible.
+- Treat the topic completely over the full route; each step covers a different content dimension.
 
 Fonte da verdade pedagogica:
 - Use o README para objetivos gerais.
