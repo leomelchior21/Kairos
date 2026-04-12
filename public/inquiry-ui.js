@@ -1,0 +1,766 @@
+var USE_LOCAL_LM = window.location.protocol === 'file:' ||
+  new URLSearchParams(window.location.search).get('local') === '1';
+var API_URL = USE_LOCAL_LM ? 'http://localhost:1234/v1/chat/completions' : '/api/chat';
+
+/**
+ * @typedef {'concept'|'fact'|'mechanism'|'comparison'|'problem_solution'} QuestionType
+ * @typedef {'multiple_choice'|'tap_choice'|'true_false'|'match'|'sort'|'fill_blanks'|'short_answer'|'final_reveal'} InteractionType
+ * @typedef {'lost'|'emerging'|'developing'|'secure'|'ready_to_synthesize'} MasteryLevel
+ * @typedef {{id:string,label:string,interaction:InteractionType,goal:string}} LearningStep
+ * @typedef {{questionType:QuestionType,steps:LearningStep[]}} InquiryFlow
+ * @typedef {{grade:string,year:string,question:string,questionType:QuestionType,masteryScore:number,masteryLevel:MasteryLevel,stepIndex:number,evidence:Array}} StudentState
+ */
+
+var FLOW_LIBRARY = {
+  concept: [
+    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Choose the best lens.' },
+    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one claim.' },
+    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match examples.' },
+    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the strongest idea.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the insight.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Confirm the earned answer.' }
+  ],
+  fact: [
+    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Find the fact type.' },
+    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Check the clue.' },
+    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'multiple_choice', goal: 'Choose evidence.' },
+    { id: 'checkpoint', label: 'Checkpoint', interaction: 'short_answer', goal: 'Say the evidence.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the fact.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the answer.' }
+  ],
+  mechanism: [
+    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Spot input and output.' },
+    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one claim.' },
+    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'sort', goal: 'Order the steps.' },
+    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the cause.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the mechanism.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the explanation.' }
+  ],
+  comparison: [
+    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose a comparison axis.' },
+    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one contrast.' },
+    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match traits.' },
+    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the clearest difference.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the comparison.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the comparison.' }
+  ],
+  problem_solution: [
+    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose the problem focus.' },
+    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one cause.' },
+    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match cause to action.' },
+    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Choose a testable step.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the solution.' },
+    { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the pattern.' }
+  ]
+};
+
+var state = createStudentState();
+var history = [];
+var busy = false;
+var sortOrder = [];
+
+function createStudentState() {
+  return {
+    grade: '',
+    year: '',
+    question: '',
+    questionType: 'concept',
+    masteryScore: 0,
+    masteryLevel: 'lost',
+    stepIndex: 0,
+    evidence: [],
+    attempts: 0,
+    currentInteraction: null,
+    finalUnlocked: false
+  };
+}
+
+function handleLandingKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    goToGrade();
+  }
+}
+
+async function goToGrade() {
+  var input = document.getElementById('landing-input');
+  var question = input.value.trim();
+  if (!question) {
+    input.focus();
+    input.style.borderColor = 'rgba(244,127,107,0.68)';
+    setTimeout(function() { input.style.borderColor = ''; }, 900);
+    return;
+  }
+  state.question = question;
+  state.questionType = classifyQuestion(question);
+  history = [{ role: 'user', content: question }];
+  await showScreen('screen-grade');
+}
+
+async function selectGrade(grade) {
+  state.grade = grade;
+  state.year = normalizeYear(grade);
+  state.stepIndex = 0;
+  state.masteryScore = 0;
+  state.masteryLevel = 'lost';
+  state.evidence = [];
+  state.attempts = 0;
+  state.finalUnlocked = false;
+  document.getElementById('mindmap-track').innerHTML = '';
+  document.getElementById('question-subtitle').textContent = state.question;
+  addMapNode('student', 'Starting idea', state.question, 'start');
+  await showScreen('screen-main');
+  buildProgressBar();
+  updateHud();
+  requestNextInteraction();
+}
+
+function showScreen(id) {
+  return new Promise(function(resolve) {
+    document.querySelectorAll('.screen').forEach(function(screen) {
+      screen.classList.toggle('hidden', screen.id !== id);
+    });
+    setTimeout(resolve, 120);
+  });
+}
+
+function classifyQuestion(question) {
+  var q = question.toLowerCase().trim();
+  if (/\b(compare|comparison|versus|vs\.?|difference|different|similar|better|worse)\b/.test(q)) return 'comparison';
+  if (/^(how|why)\s+(does|do|did|can|could|would|is|are)\b/.test(q) || /\b(work|works|process|happen|happens|mechanism|function)\b/.test(q)) return 'mechanism';
+  if (/\b(problem|solution|solve|fix|prevent|reduce|improve|protect|design|build)\b/.test(q) || /^how can\b/.test(q)) return 'problem_solution';
+  if (/\b(tallest|largest|smallest|highest|lowest|oldest|newest|capital|population|date|year|who|where|when|which)\b/.test(q)) return 'fact';
+  return 'concept';
+}
+
+function normalizeYear(grade) {
+  var match = String(grade || '').match(/[6-9]/);
+  return match ? match[0] + 'o ano' : '';
+}
+
+function getInquiryFlow(questionType) {
+  return { questionType: questionType, steps: FLOW_LIBRARY[questionType] || FLOW_LIBRARY.concept };
+}
+
+function getCurrentStep() {
+  var flow = getInquiryFlow(state.questionType);
+  return flow.steps[Math.min(state.stepIndex, flow.steps.length - 1)];
+}
+
+function getMasteryLevel(score) {
+  var safe = Math.max(0, Math.min(100, Number(score) || 0));
+  if (safe >= 85) return 'ready_to_synthesize';
+  if (safe >= 70) return 'secure';
+  if (safe >= 45) return 'developing';
+  if (safe >= 20) return 'emerging';
+  return 'lost';
+}
+
+function updateMastery(result) {
+  var gain = 0;
+  if (result.correct) {
+    if (result.type === 'fill_blanks') gain = 24;
+    else if (result.type === 'match' || result.type === 'sort') gain = 22;
+    else gain = 18;
+  } else if (result.partial) {
+    gain = 10;
+  } else {
+    gain = 3;
+  }
+  state.masteryScore = Math.max(0, Math.min(100, state.masteryScore + gain));
+  state.masteryLevel = getMasteryLevel(state.masteryScore);
+}
+
+function updateHud() {
+  var step = getCurrentStep();
+  document.getElementById('year-pill').textContent = state.year || state.grade;
+  document.getElementById('type-pill').textContent = state.questionType.replace('_', ' ');
+  document.getElementById('mastery-pill').textContent = state.masteryLevel.replace(/_/g, ' ');
+  document.getElementById('score-pill').textContent = state.masteryScore + '%';
+  document.getElementById('step-label').textContent = step.label;
+  document.getElementById('step-goal').textContent = step.goal;
+  updateProgress();
+}
+
+function buildProgressBar() {
+  var bar = document.getElementById('progress-bar');
+  bar.innerHTML = '';
+  getInquiryFlow(state.questionType).steps.forEach(function() {
+    var seg = document.createElement('div');
+    seg.className = 'progress-seg';
+    bar.appendChild(seg);
+  });
+}
+
+function updateProgress() {
+  var segs = document.querySelectorAll('.progress-seg');
+  segs.forEach(function(seg, index) {
+    seg.classList.toggle('filled', index <= state.stepIndex);
+  });
+}
+
+function addMapNode(kind, title, body, status) {
+  var track = document.getElementById('mindmap-track');
+  var node = document.createElement('article');
+  node.className = 'map-node ' + kind + (status ? ' ' + status : '');
+  node.innerHTML =
+    '<div class="node-kicker">' + esc(kind) + '</div>' +
+    '<div class="node-title">' + esc(title) + '</div>' +
+    '<div class="node-body">' + esc(body).replace(/\n/g, '<br>') + '</div>';
+  track.appendChild(node);
+  setTimeout(function() { track.scrollTop = track.scrollHeight; }, 40);
+}
+
+function renderTyping() {
+  document.getElementById('interaction-panel').innerHTML =
+    '<div class="card-kicker">Kai is building the next step</div>' +
+    '<div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>thinking...</span></div>';
+}
+
+async function requestNextInteraction() {
+  if (busy) return;
+  busy = true;
+  updateHud();
+  renderTyping();
+  var step = getCurrentStep();
+
+  try {
+    var raw = await callAI(step);
+    var interaction = coerceInteraction(parseAIResponse(raw), step);
+    state.currentInteraction = interaction;
+    state.attempts = 0;
+    history.push({ role: 'assistant', content: getKaiText(interaction) });
+    addMapNode('kai', step.label, getKaiText(interaction), interaction.type === 'final_reveal' ? 'final' : '');
+    renderInteraction(interaction);
+  } catch (error) {
+    var fallback = buildFallbackInteraction(step, error.message);
+    state.currentInteraction = fallback;
+    addMapNode('kai', step.label, getKaiText(fallback), '');
+    renderInteraction(fallback);
+  }
+
+  busy = false;
+}
+
+function renderInteraction(interaction) {
+  sortOrder = [];
+  var panel = document.getElementById('interaction-panel');
+  var html =
+    '<div class="card-kicker">' + esc(interaction.stepLabel || getCurrentStep().label) + ' - ' + esc(labelForType(interaction.type)) + '</div>' +
+    '<div class="kai-text">' + esc(interaction.text || 'Try this step.') + '</div>';
+
+  if (interaction.question) {
+    html += '<div class="kai-question">' + esc(interaction.question) + '</div>';
+  }
+
+  if (interaction.type === 'multiple_choice' || interaction.type === 'tap_choice') {
+    html += renderChoices(interaction);
+  } else if (interaction.type === 'true_false') {
+    html += renderTrueFalse();
+  } else if (interaction.type === 'match') {
+    html += renderMatch(interaction);
+  } else if (interaction.type === 'sort') {
+    html += renderSort(interaction);
+  } else if (interaction.type === 'fill_blanks') {
+    html += renderFillBlanks(interaction);
+  } else if (interaction.type === 'short_answer') {
+    html += renderShortAnswer();
+  } else if (interaction.type === 'final_reveal') {
+    html += renderFinalReveal(interaction);
+  }
+
+  if (interaction.type !== 'final_reveal') {
+    html += '<div class="feedback" id="feedback"></div>';
+    html += '<div class="action-row"><button class="primary-btn" id="submit-btn" onclick="submitCurrentInteraction()" disabled>Check</button></div>';
+  }
+
+  panel.innerHTML = html;
+}
+
+function labelForType(type) {
+  var labels = {
+    multiple_choice: 'multiple choice',
+    tap_choice: 'tap to choose',
+    true_false: 'true or false',
+    match: 'match',
+    sort: 'order',
+    fill_blanks: 'fill in the blanks',
+    short_answer: 'short answer',
+    final_reveal: 'final reveal'
+  };
+  return labels[type] || 'task';
+}
+
+function renderChoices(interaction) {
+  var letters = ['A', 'B', 'C', 'D', 'E'];
+  var html = '<div class="choice-grid">';
+  interaction.options.slice(0, 5).forEach(function(option, index) {
+    html += '<button class="choice-btn" data-letter="' + letters[index] + '" data-value="' + esc(option) + '" onclick="selectChoice(this)">' +
+      '<span class="choice-letter">' + letters[index] + '</span>' +
+      '<span>' + esc(option) + '</span>' +
+    '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function selectChoice(button) {
+  document.querySelectorAll('.choice-btn').forEach(function(item) { item.classList.remove('selected'); });
+  button.classList.add('selected');
+  enableSubmit(true);
+}
+
+function renderTrueFalse() {
+  return '<div class="choice-grid">' +
+    '<button class="choice-btn" data-letter="true" data-value="true" onclick="selectChoice(this)"><span class="choice-letter">T</span><span>True</span></button>' +
+    '<button class="choice-btn" data-letter="false" data-value="false" onclick="selectChoice(this)"><span class="choice-letter">F</span><span>False</span></button>' +
+    '</div>';
+}
+
+function renderMatch(interaction) {
+  var rights = shuffle(interaction.pairs.map(function(pair) { return pair.right; }));
+  var html = '<div class="match-list">';
+  interaction.pairs.forEach(function(pair) {
+    html += '<div class="match-row">' +
+      '<div class="match-left">' + esc(pair.left) + '</div>' +
+      '<select class="match-select" data-left="' + esc(pair.left) + '" onchange="checkFormReady()">' +
+        '<option value="">Choose...</option>' +
+        rights.map(function(right) { return '<option value="' + esc(right) + '">' + esc(right) + '</option>'; }).join('') +
+      '</select>' +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderSort(interaction) {
+  var html = '<div class="sort-list">';
+  interaction.items.forEach(function(item, index) {
+    html += '<div class="sort-item" data-index="' + (index + 1) + '" onclick="toggleSortItem(this)">' +
+      '<span class="sort-num">?</span><span>' + esc(item) + '</span>' +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function toggleSortItem(item) {
+  var index = item.getAttribute('data-index');
+  if (item.classList.contains('placed')) {
+    item.classList.remove('placed');
+    sortOrder = sortOrder.filter(function(value) { return value !== index; });
+  } else {
+    item.classList.add('placed');
+    sortOrder.push(index);
+  }
+  document.querySelectorAll('.sort-item').forEach(function(node) {
+    var value = node.getAttribute('data-index');
+    var position = sortOrder.indexOf(value);
+    node.querySelector('.sort-num').textContent = position === -1 ? '?' : String(position + 1);
+  });
+  enableSubmit(sortOrder.length === document.querySelectorAll('.sort-item').length);
+}
+
+function renderFillBlanks(interaction) {
+  var sentence = interaction.sentence || 'I used ___ to build ___.';
+  var parts = sentence.split('___');
+  var html = '<div class="fill-sentence">';
+  parts.forEach(function(part, index) {
+    html += esc(part);
+    if (index < parts.length - 1) {
+      html += '<input class="fill-input" maxlength="28" placeholder="..." oninput="checkFormReady()" onpaste="blockPaste(event)">';
+    }
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderShortAnswer() {
+  return '<textarea class="short-input" maxlength="80" rows="3" placeholder="Use 5 words or less..." oninput="checkFormReady()" onpaste="blockPaste(event)"></textarea>';
+}
+
+function renderFinalReveal(interaction) {
+  var html = '<div class="final-answer">' + esc(interaction.finalAnswer || interaction.text || 'Answer unlocked.').replace(/\n/g, '<br>') + '</div>';
+  if (interaction.connections && interaction.connections.length) {
+    html += '<div class="connection-grid">';
+    interaction.connections.forEach(function(card) {
+      html += '<article class="connection-card">' +
+        '<strong>' + esc(card.title) + '</strong>' +
+        '<span>' + esc(card.discipline) + '</span>' +
+        '<p>' + esc(card.detail) + '</p>' +
+      '</article>';
+    });
+    html += '</div>';
+    addMapNode('kai', 'Curriculum connections', interaction.connections.map(function(card) { return card.title; }).join('\n'), 'final');
+  }
+  return html;
+}
+
+function enableSubmit(isReady) {
+  var btn = document.getElementById('submit-btn');
+  if (btn) btn.disabled = !isReady;
+}
+
+function checkFormReady() {
+  var interaction = state.currentInteraction;
+  if (!interaction) return;
+  if (interaction.type === 'match') {
+    var selects = Array.from(document.querySelectorAll('.match-select'));
+    enableSubmit(selects.length > 0 && selects.every(function(select) { return Boolean(select.value); }));
+  } else if (interaction.type === 'fill_blanks') {
+    var blanks = Array.from(document.querySelectorAll('.fill-input'));
+    enableSubmit(blanks.length > 0 && blanks.every(function(input) { return input.value.trim().length > 0; }));
+  } else if (interaction.type === 'short_answer') {
+    var input = document.querySelector('.short-input');
+    enableSubmit(input && input.value.trim().length > 1);
+  }
+}
+
+function submitCurrentInteraction() {
+  if (busy || !state.currentInteraction) return;
+  var answer = collectStudentAnswer(state.currentInteraction);
+  var result = evaluateInteraction(state.currentInteraction, answer);
+  state.evidence.push(result);
+  updateMastery(result);
+  updateHud();
+
+  addMapNode('student', result.correct ? 'Evidence gained' : (result.partial ? 'Partial evidence' : 'Needs another clue'), result.summary, result.correct ? 'correct' : (result.partial ? 'partial' : 'missed'));
+  history.push({ role: 'user', content: result.summary });
+
+  if (!result.correct && !result.partial && state.attempts < 1) {
+    state.attempts += 1;
+    showFeedback('Try again. Hint: ' + (state.currentInteraction.hint || 'Look for the clue that fits the question.'), 'miss');
+    markSelectedMiss();
+    return;
+  }
+
+  if (result.correct) {
+    showFeedback('Good. You added usable evidence.', 'good');
+  } else if (result.partial) {
+    showFeedback('Close enough to keep building. Kai will narrow the next step.', 'warn');
+  } else {
+    showFeedback('We will reframe it with fewer words.', 'warn');
+  }
+
+  setTimeout(function() {
+    advanceFlow(result);
+    requestNextInteraction();
+  }, 520);
+}
+
+function collectStudentAnswer(interaction) {
+  if (interaction.type === 'multiple_choice' || interaction.type === 'tap_choice' || interaction.type === 'true_false') {
+    var selected = document.querySelector('.choice-btn.selected');
+    return selected ? { letter: selected.getAttribute('data-letter'), value: selected.getAttribute('data-value') } : {};
+  }
+  if (interaction.type === 'match') {
+    return Array.from(document.querySelectorAll('.match-select')).map(function(select) {
+      return { left: select.getAttribute('data-left'), right: select.value };
+    });
+  }
+  if (interaction.type === 'sort') return sortOrder.slice();
+  if (interaction.type === 'fill_blanks') {
+    return Array.from(document.querySelectorAll('.fill-input')).map(function(input) { return input.value.trim(); });
+  }
+  if (interaction.type === 'short_answer') {
+    var input = document.querySelector('.short-input');
+    return input ? input.value.trim() : '';
+  }
+  return '';
+}
+
+function evaluateInteraction(interaction, answer) {
+  var correct = false;
+  var partial = false;
+  var summary = '';
+
+  if (interaction.type === 'multiple_choice' || interaction.type === 'tap_choice') {
+    var expected = normalizeAnswer(interaction.answer);
+    correct = expected === normalizeAnswer(answer.letter) || expected === normalizeAnswer(answer.value);
+    summary = answer.value || answer.letter || 'No choice';
+  } else if (interaction.type === 'true_false') {
+    correct = normalizeAnswer(interaction.answer) === normalizeAnswer(answer.letter);
+    summary = answer.letter === 'true' ? 'True' : 'False';
+  } else if (interaction.type === 'match') {
+    var matches = 0;
+    answer.forEach(function(item) {
+      var pair = interaction.pairs.find(function(candidate) { return normalizeAnswer(candidate.left) === normalizeAnswer(item.left); });
+      if (pair && normalizeAnswer(pair.right) === normalizeAnswer(item.right)) matches += 1;
+    });
+    correct = matches === interaction.pairs.length;
+    partial = !correct && matches > 0;
+    summary = answer.map(function(item) { return item.left + ' -> ' + item.right; }).join(', ');
+  } else if (interaction.type === 'sort') {
+    var expectedOrder = interaction.order.length ? interaction.order.map(String) : interaction.items.map(function(_, index) { return String(index + 1); });
+    correct = expectedOrder.join('|') === answer.map(String).join('|');
+    var positionMatches = answer.filter(function(value, index) { return String(value) === expectedOrder[index]; }).length;
+    partial = !correct && positionMatches > 0;
+    summary = answer.map(function(index) { return interaction.items[Number(index) - 1]; }).join(' -> ');
+  } else if (interaction.type === 'fill_blanks') {
+    var filled = answer.filter(Boolean).length;
+    var expectedBlanks = interaction.blanks || [];
+    var matched = 0;
+    answer.forEach(function(value, index) {
+      if (expectedBlanks[index] && normalizeAnswer(value).includes(normalizeAnswer(expectedBlanks[index]))) matched += 1;
+    });
+    correct = expectedBlanks.length ? matched >= Math.ceil(expectedBlanks.length * 0.66) : filled === answer.length;
+    partial = !correct && (expectedBlanks.length ? matched > 0 : filled > 0);
+    summary = answer.join(', ');
+  } else if (interaction.type === 'short_answer') {
+    var words = String(answer).trim().split(/\s+/).filter(Boolean);
+    correct = words.length >= 2 && !/^(idk|dont know|i dont know|no idea)$/i.test(String(answer).trim());
+    partial = !correct && words.length > 0;
+    summary = String(answer);
+  }
+
+  return {
+    type: interaction.type,
+    step: interaction.stepId,
+    correct: correct,
+    partial: partial,
+    summary: summary,
+    masteryAfter: state.masteryScore
+  };
+}
+
+function showFeedback(message, tone) {
+  var feedback = document.getElementById('feedback');
+  if (!feedback) return;
+  feedback.className = 'feedback show ' + (tone || 'warn');
+  feedback.textContent = message;
+}
+
+function markSelectedMiss() {
+  var selected = document.querySelector('.choice-btn.selected');
+  if (selected) {
+    selected.classList.remove('selected');
+    selected.classList.add('disabled');
+    enableSubmit(false);
+  }
+}
+
+function advanceFlow(result) {
+  var flow = getInquiryFlow(state.questionType);
+  var step = getCurrentStep();
+  if (step.id === 'synthesis_challenge' && (result.correct || state.masteryScore >= 74)) {
+    state.finalUnlocked = true;
+    state.stepIndex = flow.steps.length - 1;
+    return;
+  }
+  if (state.masteryScore >= 85 && state.stepIndex < flow.steps.length - 2) {
+    state.stepIndex = flow.steps.length - 2;
+    return;
+  }
+  state.stepIndex = Math.min(state.stepIndex + 1, flow.steps.length - 2);
+}
+
+async function callAI(step) {
+  var body = {
+    model: USE_LOCAL_LM ? 'qwen2.5:7b' : 'llama-3.3-70b-versatile',
+    kaiContext: {
+      grade: state.grade,
+      year: state.year,
+      firstQuestion: state.question,
+      questionType: state.questionType,
+      masteryScore: state.masteryScore,
+      masteryLevel: state.masteryLevel,
+      stepIndex: state.stepIndex,
+      learningStep: step.id,
+      preferredInteraction: step.interaction,
+      evidence: state.evidence.slice(-5)
+    },
+    messages: [
+      { role: 'system', content: buildLocalSystemPrompt(step) },
+      history.slice(-8)
+    ].flat(),
+    max_tokens: step.interaction === 'final_reveal' ? 700 : 430,
+    temperature: 0.62
+  };
+
+  var response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    var error = await response.json().catch(function() { return { error: 'API error ' + response.status }; });
+    throw new Error(error.error && error.error.message ? error.error.message : (error.error || 'API error ' + response.status));
+  }
+
+  var data = await response.json();
+  return data.choices[0].message.content;
+}
+
+function buildLocalSystemPrompt(step) {
+  return [
+    'You are Kai, an inquiry engine for middle school students.',
+    'Do not answer immediately. Guide with one short interaction.',
+    'Final answers are allowed only at final_reveal.',
+    'Use these tags only: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTE:], [ANSWER:], [HINT:], [PAIR1:]..[PAIR4:], [ITEM1:]..[ITEM5:], [ORDER:], [SENTENCE:], [BLANK1:]..[BLANK4:], [FINAL:], [CONNECTION1:]..[CONNECTION4:].',
+    'Current step: ' + step.id + '. Preferred interaction: ' + step.interaction + '.',
+    'Question type: ' + state.questionType + '. Mastery: ' + state.masteryLevel + '.'
+  ].join('\n');
+}
+
+function parseAIResponse(raw) {
+  var currentStep = getCurrentStep();
+  var result = {
+    type: readTag(raw, 'TYPE') || 'short_answer',
+    stepId: currentStep.id,
+    stepLabel: currentStep.label,
+    text: readTag(raw, 'TEXT') || '',
+    question: readTag(raw, 'QUESTION') || '',
+    options: [],
+    answer: readTag(raw, 'ANSWER') || '',
+    hint: readTag(raw, 'HINT') || '',
+    pairs: [],
+    items: [],
+    order: [],
+    sentence: readTag(raw, 'SENTENCE') || '',
+    blanks: [],
+    finalAnswer: readTag(raw, 'FINAL') || '',
+    connections: []
+  };
+
+  ['A', 'B', 'C', 'D', 'E'].forEach(function(letter) {
+    var option = readTag(raw, 'OPT' + letter);
+    if (option) result.options.push(option);
+  });
+
+  for (var p = 1; p <= 4; p++) {
+    var pair = readTag(raw, 'PAIR' + p);
+    if (pair && pair.indexOf('|') !== -1) {
+      var pairParts = pair.split('|');
+      result.pairs.push({ left: pairParts[0].trim(), right: pairParts.slice(1).join('|').trim() });
+    }
+  }
+
+  for (var i = 1; i <= 5; i++) {
+    var item = readTag(raw, 'ITEM' + i);
+    if (item) result.items.push(item);
+    var blank = readTag(raw, 'BLANK' + i);
+    if (blank) result.blanks.push(blank);
+    var connection = readTag(raw, 'CONNECTION' + i);
+    if (connection) {
+      var parts = connection.split('|');
+      result.connections.push({
+        title: (parts[0] || 'Connection').trim(),
+        discipline: (parts[1] || 'Curriculum').trim(),
+        detail: parts.slice(2).join('|').trim() || 'Use this idea in your year.'
+      });
+    }
+  }
+
+  var order = readTag(raw, 'ORDER');
+  if (order) result.order = order.split(',').map(function(value) { return value.trim(); }).filter(Boolean);
+
+  if (result.type === 'quiz') result.type = 'multiple_choice';
+  if (result.type === 'open') result.type = 'short_answer';
+  if (result.type === 'rearrange') result.type = 'sort';
+  return result;
+}
+
+function readTag(raw, tag) {
+  var match = String(raw || '').match(new RegExp('\\[' + tag + ':([\\s\\S]*?)\\]'));
+  return match ? match[1].trim() : '';
+}
+
+function coerceInteraction(interaction, step) {
+  interaction.stepId = step.id;
+  interaction.stepLabel = step.label;
+  if (step.interaction === 'final_reveal') interaction.type = 'final_reveal';
+  if (!interaction.text && interaction.type !== 'final_reveal') interaction.text = 'Small step.';
+
+  if ((interaction.type === 'multiple_choice' || interaction.type === 'tap_choice') && interaction.options.length < 2) {
+    return buildFallbackInteraction(step);
+  }
+  if (interaction.type === 'true_false' && !interaction.answer) interaction.answer = 'true';
+  if (interaction.type === 'match' && interaction.pairs.length < 2) return buildFallbackInteraction(step);
+  if (interaction.type === 'sort' && interaction.items.length < 3) return buildFallbackInteraction(step);
+  if (interaction.type === 'fill_blanks' && !interaction.sentence) return buildFallbackInteraction(step);
+  if (interaction.type === 'final_reveal' && !interaction.finalAnswer) {
+    interaction.finalAnswer = 'You built the reasoning path. The final answer is ready to confirm with Kai.';
+  }
+  return interaction;
+}
+
+function buildFallbackInteraction(step, errorMessage) {
+  var base = {
+    type: step.interaction,
+    stepId: step.id,
+    stepLabel: step.label,
+    text: errorMessage ? 'Kai needs a simpler path.' : 'Start with a clue.',
+    question: 'Which move helps most?',
+    options: ['Find a clue', 'Test a claim', 'Match examples', 'Build a sentence'],
+    answer: 'A',
+    hint: 'Look for the option that creates evidence.',
+    pairs: [
+      { left: 'clue', right: 'notice' },
+      { left: 'example', right: 'test' },
+      { left: 'action', right: 'try' }
+    ],
+    items: ['clue', 'example', 'test', 'explain'],
+    order: ['1', '2', '3', '4'],
+    sentence: 'I used ___ and ___ to build ___.',
+    blanks: ['clues', 'evidence', 'understanding'],
+    finalAnswer: '',
+    connections: []
+  };
+  if (step.interaction === 'true_false') {
+    base.text = 'A clue is not the final answer.';
+    base.question = 'True or false?';
+    base.answer = 'true';
+  }
+  if (step.interaction === 'short_answer') {
+    base.text = 'Use one small thought.';
+    base.question = 'What clue helped most?';
+  }
+  if (step.interaction === 'final_reveal') {
+    base.type = 'final_reveal';
+    base.text = 'Answer unlocked';
+    base.finalAnswer = 'You completed the inquiry path. Kai could not reach the live model, so try once more to reveal the exact answer.';
+  }
+  return base;
+}
+
+function getKaiText(interaction) {
+  var text = interaction.text || '';
+  if (interaction.question) text += (text ? '\n' : '') + interaction.question;
+  if (interaction.type === 'final_reveal' && interaction.finalAnswer) text += (text ? '\n' : '') + interaction.finalAnswer;
+  return text || interaction.stepLabel || 'Kai step';
+}
+
+function normalizeAnswer(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function shuffle(items) {
+  var copy = items.slice();
+  for (var i = copy.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = copy[i];
+    copy[i] = copy[j];
+    copy[j] = tmp;
+  }
+  return copy;
+}
+
+function esc(value) {
+  var div = document.createElement('div');
+  div.textContent = value == null ? '' : String(value);
+  return div.innerHTML;
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function blockPaste(e) {
+  e.preventDefault();
+}
