@@ -784,6 +784,8 @@ function buildFallbackInteraction(step, errorMessage) {
 function getContentFallback() {
   var topic = getQuestionTopic();
   var topicLabel = topic.length > 32 ? 'this topic' : topic;
+  var knownFallback = getKnownTopicFallback(topic);
+  if (knownFallback) return knownFallback;
   var bank = {
     concept: {
       text: 'Look at the idea itself.',
@@ -869,6 +871,65 @@ function getContentFallback() {
   return bank[state.questionType] || bank.concept;
 }
 
+function getKnownTopicFallback(topic) {
+  var normalized = normalizeAnswer(topic);
+  if (/solar\s*punk|solarpunk/.test(normalized)) {
+    return {
+      text: 'Start with the future.',
+      question: 'Which clue fits solarpunk?',
+      options: ['Nature plus technology', 'Only old machines', 'A mountain height', 'A winter war'],
+      claim: 'Solarpunk connects nature and technology.',
+      hint: 'Look for hope, design, and sustainability.',
+      pairs: [
+        { left: 'solar', right: 'clean energy' },
+        { left: 'gardens', right: 'living cities' },
+        { left: 'community', right: 'shared future' }
+      ],
+      items: ['imagine future', 'use clean tech', 'protect nature', 'improve community'],
+      sentence: 'Solarpunk imagines ___ with ___ and ___.',
+      blanks: ['future', 'nature', 'technology'],
+      shortQuestion: 'Name one solarpunk clue.'
+    };
+  }
+  if (/cold war/.test(normalized)) {
+    return {
+      text: 'Look for tension.',
+      question: 'Which clue fits the Cold War?',
+      options: ['USA versus USSR', 'Only cold weather', 'One mountain', 'Plant reproduction'],
+      claim: 'The Cold War was not about weather.',
+      hint: 'Think rivalry, power, and ideas.',
+      pairs: [
+        { left: 'USA', right: 'one superpower' },
+        { left: 'USSR', right: 'rival superpower' },
+        { left: 'proxy war', right: 'indirect conflict' }
+      ],
+      items: ['World War II ends', 'rival blocs grow', 'arms race expands', 'proxy conflicts happen'],
+      sentence: 'The Cold War was a ___ between the ___ and ___.',
+      blanks: ['rivalry', 'USA', 'USSR'],
+      shortQuestion: 'Name one rival.'
+    };
+  }
+  if (/tallest mountain|highest mountain|mount everest|everest/.test(normalized)) {
+    return {
+      text: 'Check the measurement.',
+      question: 'Which clue decides tallest?',
+      options: ['Height above sea level', 'Color of the rock', 'Age of the name', 'Number of climbers'],
+      claim: 'Tallest depends on the measurement rule.',
+      hint: 'Facts need a measuring rule.',
+      pairs: [
+        { left: 'above sea level', right: 'Everest' },
+        { left: 'base to peak', right: 'Mauna Kea debate' },
+        { left: 'measurement', right: 'evidence rule' }
+      ],
+      items: ['choose measurement', 'compare heights', 'check evidence', 'name mountain'],
+      sentence: 'Using height above ___, the mountain is ___.',
+      blanks: ['sea level', 'Everest'],
+      shortQuestion: 'Name the measurement rule.'
+    };
+  }
+  return null;
+}
+
 function isMetaInteraction(interaction) {
   var text = [
     interaction.text,
@@ -877,7 +938,7 @@ function isMetaInteraction(interaction) {
     (interaction.items || []).join(' '),
     (interaction.pairs || []).map(function(pair) { return pair.left + ' ' + pair.right; }).join(' ')
   ].join(' ').toLowerCase();
-  return /which (move|path|interaction|activity|strategy)|move helps|path should|best lens|which lens|find a clue|test a claim|match examples|build a sentence/.test(text);
+  return /which (move|path|interaction|activity|strategy)|move helps|path should|best lens|which lens|find a clue|test a claim|match examples|build a sentence|max \d+ words|content question|content match question|content order question|topic option|one content clue|one short content claim|topic word|meaning\/example|topic step|expected word|short sentence with|answer in 5 words/.test(text);
 }
 
 function getQuestionTopic() {

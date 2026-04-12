@@ -44,6 +44,7 @@ function buildInteractionRule({ step, masteryLevel, questionType, firstQuestion 
     'Kai chooses the scaffold. The student must never choose the activity, strategy, lens, path, move, or interaction type.',
     'All visible choices must be about the student topic itself: possible meanings, examples, causes, evidence, steps, or claims.',
     'Never use visible options like "find a clue", "test a claim", "match examples", "build a sentence", "best lens", or "which move helps".',
+    'Never copy schema words into the response. Invalid visible text includes: "max 10 words", "content question", "topic option", "one content clue", "expected word", or "meaning/example".',
   ].join('\n');
 
   const stepGuidance = {
@@ -56,14 +57,14 @@ function buildInteractionRule({ step, masteryLevel, questionType, firstQuestion 
   };
 
   const typeRules = {
-    multiple_choice: 'Output: [TYPE:multiple_choice][TEXT:max 10 words][QUESTION:content question, max 14 words][OPTA:topic option][OPTB:topic option][OPTC:topic option][OPTD:topic option][ANSWER:A|B|C|D][HINT:one content clue].',
-    tap_choice: 'Output: [TYPE:tap_choice][TEXT:max 10 words][QUESTION:content question, max 14 words][OPTA:topic option][OPTB:topic option][OPTC:topic option][OPTD:topic option][ANSWER:A|B|C|D][HINT:one content clue].',
-    true_false: 'Output: [TYPE:true_false][TEXT:one short content claim][QUESTION:True or false?][ANSWER:true|false][HINT:one content clue].',
-    match: 'Output: [TYPE:match][TEXT:max 10 words][QUESTION:content match question][PAIR1:topic word|meaning/example][PAIR2:topic word|meaning/example][PAIR3:topic word|meaning/example][HINT:one content clue].',
-    sort: 'Output: [TYPE:sort][TEXT:max 10 words][QUESTION:content order question][ITEM1:topic step][ITEM2:topic step][ITEM3:topic step][ITEM4:topic step][ORDER:1,2,3,4][HINT:one content clue].',
-    fill_blanks: 'Output: [TYPE:fill_blanks][TEXT:Voce desbloqueou o raciocinio! Complete as lacunas.][SENTENCE:short sentence with ___ blanks][BLANK1:expected word][BLANK2:expected word][BLANK3:expected word][HINT:one clue].',
-    short_answer: 'Output: [TYPE:short_answer][TEXT:max 10 words][QUESTION:content question; answer in 5 words or less][HINT:one content clue].',
-    final_reveal: 'Output: [TYPE:final_reveal][TEXT:Answer unlocked][FINAL:short final answer, 1-3 sentences][CONNECTION1:title|discipline|why it connects][CONNECTION2:title|discipline|why it connects].',
+    multiple_choice: 'Use tag names TYPE, TEXT, QUESTION, OPTA, OPTB, OPTC, OPTD, ANSWER, HINT. TYPE must be multiple_choice. Fill every other tag with real topic content.',
+    tap_choice: 'Use tag names TYPE, TEXT, QUESTION, OPTA, OPTB, OPTC, OPTD, ANSWER, HINT. TYPE must be tap_choice. Fill every other tag with real topic content.',
+    true_false: 'Use tag names TYPE, TEXT, QUESTION, ANSWER, HINT. TYPE must be true_false. TEXT is a real topic claim. ANSWER is true or false.',
+    match: 'Use tag names TYPE, TEXT, QUESTION, PAIR1, PAIR2, PAIR3, HINT. TYPE must be match. Each pair uses real topic content in left|right form.',
+    sort: 'Use tag names TYPE, TEXT, QUESTION, ITEM1, ITEM2, ITEM3, ITEM4, ORDER, HINT. TYPE must be sort. Items are real topic steps. ORDER is numeric.',
+    fill_blanks: 'Use tag names TYPE, TEXT, SENTENCE, BLANK1, BLANK2, BLANK3, HINT. TYPE must be fill_blanks. Sentence and blanks use real topic concepts.',
+    short_answer: 'Use tag names TYPE, TEXT, QUESTION, HINT. TYPE must be short_answer. The question asks for a real content answer in five words or less.',
+    final_reveal: 'Use tag names TYPE, TEXT, FINAL, CONNECTION1, CONNECTION2. TYPE must be final_reveal. FINAL is the concise answer. Each connection uses real title|discipline|reason.',
   };
 
   return [...base, simplify, contentGuard, stepGuidance[step.id], typeRules[step.interaction]].join('\n');
