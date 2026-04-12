@@ -57,7 +57,7 @@ var FLOW_LIBRARY = {
 };
 
 var state = createStudentState();
-var history = [];
+var chatHistory = [];
 var busy = false;
 var sortOrder = [];
 
@@ -150,7 +150,7 @@ async function goToGrade() {
   }
   state.question = question;
   state.questionType = classifyQuestion(question);
-  history = [{ role: 'user', content: question }];
+  chatHistory = [{ role: 'user', content: question }];
   await showScreen('screen-grade');
 }
 
@@ -286,7 +286,7 @@ async function requestNextInteraction() {
     var interaction = coerceInteraction(parseAIResponse(raw), step);
     state.currentInteraction = interaction;
     state.attempts = 0;
-    history.push({ role: 'assistant', content: getKaiText(interaction) });
+    chatHistory.push({ role: 'assistant', content: getKaiText(interaction) });
     addMapNode('kai', step.label, getKaiText(interaction), interaction.type === 'final_reveal' ? 'final' : '');
     renderInteraction(interaction);
   } catch (error) {
@@ -482,7 +482,7 @@ function submitCurrentInteraction() {
   updateHud();
 
   addMapNode('student', result.correct ? 'Evidence gained' : (result.partial ? 'Partial evidence' : 'Needs another clue'), result.summary, result.correct ? 'correct' : (result.partial ? 'partial' : 'missed'));
-  history.push({ role: 'user', content: result.summary });
+  chatHistory.push({ role: 'user', content: result.summary });
 
   if (!result.correct && !result.partial && state.attempts < 1) {
     state.attempts += 1;
@@ -628,7 +628,7 @@ async function callAI(step) {
     },
     messages: [
       { role: 'system', content: buildLocalSystemPrompt(step) },
-      history.slice(-8)
+      chatHistory.slice(-8)
     ].flat(),
     max_tokens: step.interaction === 'final_reveal' ? 700 : 430,
     temperature: 0.62
