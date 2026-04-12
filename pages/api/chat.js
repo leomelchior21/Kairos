@@ -27,11 +27,12 @@ async function getCsvContext() {
   return cachedCsv;
 }
 
-function buildInteractionRule({ step, masteryLevel, questionType }) {
+function buildInteractionRule({ step, masteryLevel, questionType, firstQuestion }) {
   const base = [
     `Learning step: ${step.id} (${step.label}).`,
     `Question type: ${questionType}.`,
     `Mastery level: ${masteryLevel}.`,
+    `Student topic: ${firstQuestion}.`,
     `Goal: ${step.goal}.`,
   ];
 
@@ -39,18 +40,33 @@ function buildInteractionRule({ step, masteryLevel, questionType }) {
     ? 'Use very short words, concrete clues, and closed choices. If the last answer was weak, reframe instead of saying incorrect.'
     : 'Allow one small inference, but still keep the task short.';
 
+  const contentGuard = [
+    'Kai chooses the scaffold. The student must never choose the activity, strategy, lens, path, move, or interaction type.',
+    'All visible choices must be about the student topic itself: possible meanings, examples, causes, evidence, steps, or claims.',
+    'Never use visible options like "find a clue", "test a claim", "match examples", "build a sentence", "best lens", or "which move helps".',
+  ].join('\n');
+
+  const stepGuidance = {
+    hook: 'Create a content hook. Ask the student to identify a concrete clue inside the topic, not the learning strategy.',
+    prior_knowledge: 'Create one short content claim about the topic for true/false.',
+    guided_discovery: 'Use topic words, examples, causes, actors, or process parts.',
+    checkpoint: 'Ask for the strongest content meaning, evidence, cause, contrast, or action.',
+    synthesis_challenge: 'Use the exact concepts discovered in this topic. The blanks are content words.',
+    final_reveal: 'Now reveal the concise answer and add curriculum connection cards if relevant.',
+  };
+
   const typeRules = {
-    multiple_choice: 'Output: [TYPE:multiple_choice][TEXT:max 10 words][QUESTION:max 14 words][OPTA:...][OPTB:...][OPTC:...][OPTD:...][ANSWER:A|B|C|D][HINT:one clue].',
-    tap_choice: 'Output: [TYPE:tap_choice][TEXT:max 10 words][QUESTION:max 14 words][OPTA:...][OPTB:...][OPTC:...][OPTD:...][ANSWER:A|B|C|D][HINT:one clue].',
-    true_false: 'Output: [TYPE:true_false][TEXT:one short claim][QUESTION:True or false?][ANSWER:true|false][HINT:one clue].',
-    match: 'Output: [TYPE:match][TEXT:max 10 words][QUESTION:max 14 words][PAIR1:left|right][PAIR2:left|right][PAIR3:left|right][HINT:one clue].',
-    sort: 'Output: [TYPE:sort][TEXT:max 10 words][QUESTION:max 14 words][ITEM1:...][ITEM2:...][ITEM3:...][ITEM4:...][ORDER:1,2,3,4][HINT:one clue].',
+    multiple_choice: 'Output: [TYPE:multiple_choice][TEXT:max 10 words][QUESTION:content question, max 14 words][OPTA:topic option][OPTB:topic option][OPTC:topic option][OPTD:topic option][ANSWER:A|B|C|D][HINT:one content clue].',
+    tap_choice: 'Output: [TYPE:tap_choice][TEXT:max 10 words][QUESTION:content question, max 14 words][OPTA:topic option][OPTB:topic option][OPTC:topic option][OPTD:topic option][ANSWER:A|B|C|D][HINT:one content clue].',
+    true_false: 'Output: [TYPE:true_false][TEXT:one short content claim][QUESTION:True or false?][ANSWER:true|false][HINT:one content clue].',
+    match: 'Output: [TYPE:match][TEXT:max 10 words][QUESTION:content match question][PAIR1:topic word|meaning/example][PAIR2:topic word|meaning/example][PAIR3:topic word|meaning/example][HINT:one content clue].',
+    sort: 'Output: [TYPE:sort][TEXT:max 10 words][QUESTION:content order question][ITEM1:topic step][ITEM2:topic step][ITEM3:topic step][ITEM4:topic step][ORDER:1,2,3,4][HINT:one content clue].',
     fill_blanks: 'Output: [TYPE:fill_blanks][TEXT:Voce desbloqueou o raciocinio! Complete as lacunas.][SENTENCE:short sentence with ___ blanks][BLANK1:expected word][BLANK2:expected word][BLANK3:expected word][HINT:one clue].',
-    short_answer: 'Output: [TYPE:short_answer][TEXT:max 10 words][QUESTION:answer in 5 words or less][HINT:one clue].',
+    short_answer: 'Output: [TYPE:short_answer][TEXT:max 10 words][QUESTION:content question; answer in 5 words or less][HINT:one content clue].',
     final_reveal: 'Output: [TYPE:final_reveal][TEXT:Answer unlocked][FINAL:short final answer, 1-3 sentences][CONNECTION1:title|discipline|why it connects][CONNECTION2:title|discipline|why it connects].',
   };
 
-  return [...base, simplify, typeRules[step.interaction]].join('\n');
+  return [...base, simplify, contentGuard, stepGuidance[step.id], typeRules[step.interaction]].join('\n');
 }
 
 function formatConnectionCards(cards = []) {
@@ -100,6 +116,8 @@ Codigo de etica:
 - Wrong answers should trigger a hint, narrowed options, or a reframe. Do not shame the student.
 - Prefer low-language-load interactions: multiple choice, tap choice, true/false, match, sort, fill blanks, very short answer.
 - Open-ended writing is optional and should appear later.
+- Kai escolhe a interacao e a estrategia. O estudante so escolhe respostas sobre o conteudo.
+- Nunca pergunte qual caminho, movimento, lente, estrategia ou tipo de interacao ajuda mais.
 - Linguagem curta, inspiradora e tecnica na medida certa.
 - Referencias permitidas quando relevantes: sensores, circuitos, biomimetica, prototipos, ODS, cidades sustentaveis.
 
@@ -118,7 +136,7 @@ Formato obrigatorio:
 - [ANSWER:] and [BLANK:] are hidden validation data. Do not mention them in [TEXT:].
 - [FINAL:] must be empty unless TYPE is final_reveal.
 
-${buildInteractionRule({ step, masteryLevel, questionType })}
+${buildInteractionRule({ step, masteryLevel, questionType, firstQuestion })}
 
 CSV connection cards for final reveal:
 ${formatConnectionCards(csvCards)}

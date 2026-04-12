@@ -18,7 +18,7 @@ Common misconceptions:
 - Solarpunk is just fantasy with no real-world action.
 
 Sequence of steps:
-1. Hook, multiple choice: "Which lens fits this idea best?" Options compare style, future, gadget, or weather.
+1. Hook, multiple choice: "Which clue fits solarpunk best?" Options compare future, gadget, weather, or random style.
 2. Prior knowledge, true/false: "Solarpunk combines nature and technology."
 3. Guided discovery, match: Match "green roofs", "solar panels", and "community gardens" to the ideas they support.
 4. Checkpoint, multiple choice: Pick the strongest reason solarpunk is more than decoration.
@@ -53,7 +53,7 @@ Common misconceptions:
 - Base-to-peak and above-sea-level measurements always give the same result.
 
 Sequence of steps:
-1. Hook, multiple choice: "What must we choose first?" Options include height rule, color, country size, or age.
+1. Hook, multiple choice: "Which measurement clue matters?" Options include height rule, color, country size, or age.
 2. Prior knowledge, true/false: "A measurement rule changes the answer."
 3. Guided discovery, multiple choice: Choose "height above sea level" as the deciding evidence.
 4. Checkpoint, short answer: "Name the measurement clue in five words or less."
@@ -90,7 +90,7 @@ Common misconceptions:
 - Only soldiers were involved.
 
 Sequence of steps:
-1. Hook, multiple choice: "Which clue matters most?" Options include rivalry, weather, one battle, or sports.
+1. Hook, multiple choice: "Which Cold War clue fits?" Options include rivalry, weather, one battle, or sports.
 2. Prior knowledge, true/false: "The Cold War had tension without direct superpower war."
 3. Guided discovery, match: Match "USA", "Soviet Union", and "proxy wars" to their roles.
 4. Checkpoint, multiple choice: Pick the clearest description of the conflict.

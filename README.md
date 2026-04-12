@@ -46,6 +46,7 @@ O produto deve operar como motor de investigacao, nao como motor de resposta:
 - Hint/remediation engine: transforma erro em pista, opcao reduzida ou reformulacao.
 - Synthesis challenge generator: exige preenchimento de lacunas antes da revelacao.
 - Final answer revealer: mostra a resposta final e cards de conexao curricular apenas depois da sintese.
+- Kai escolhe a estrategia e o tipo de interacao internamente. O estudante nunca deve escolher "qual caminho ajuda mais"; ele escolhe apenas respostas sobre o conteudo.
 
 Exemplos completos de fluxo estao em `docs/inquiry-example-flows.md`.
 

@@ -13,17 +13,17 @@ var API_URL = USE_LOCAL_LM ? 'http://localhost:1234/v1/chat/completions' : '/api
 
 var FLOW_LIBRARY = {
   concept: [
-    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Choose the best lens.' },
-    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one claim.' },
-    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match examples.' },
-    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the strongest idea.' },
-    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the insight.' },
+    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Notice one content clue.' },
+    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one topic claim.' },
+    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match topic examples.' },
+    { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the strongest meaning.' },
+    { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the topic sentence.' },
     { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Confirm the earned answer.' }
   ],
   fact: [
-    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Find the fact type.' },
-    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Check the clue.' },
-    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'multiple_choice', goal: 'Choose evidence.' },
+    { id: 'hook', label: 'Hook', interaction: 'multiple_choice', goal: 'Choose the content criterion.' },
+    { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one evidence claim.' },
+    { id: 'guided_discovery', label: 'Guided discovery', interaction: 'multiple_choice', goal: 'Choose content evidence.' },
     { id: 'checkpoint', label: 'Checkpoint', interaction: 'short_answer', goal: 'Say the evidence.' },
     { id: 'synthesis_challenge', label: 'Synthesis challenge', interaction: 'fill_blanks', goal: 'Complete the fact.' },
     { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the answer.' }
@@ -37,7 +37,7 @@ var FLOW_LIBRARY = {
     { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the explanation.' }
   ],
   comparison: [
-    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose a comparison axis.' },
+    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose a content feature.' },
     { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one contrast.' },
     { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match traits.' },
     { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Pick the clearest difference.' },
@@ -45,7 +45,7 @@ var FLOW_LIBRARY = {
     { id: 'final_reveal', label: 'Final reveal', interaction: 'final_reveal', goal: 'Reveal the comparison.' }
   ],
   problem_solution: [
-    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose the problem focus.' },
+    { id: 'hook', label: 'Hook', interaction: 'tap_choice', goal: 'Choose the content problem.' },
     { id: 'prior_knowledge', label: 'Prior knowledge', interaction: 'true_false', goal: 'Test one cause.' },
     { id: 'guided_discovery', label: 'Guided discovery', interaction: 'match', goal: 'Match cause to action.' },
     { id: 'checkpoint', label: 'Checkpoint', interaction: 'multiple_choice', goal: 'Choose a testable step.' },
@@ -596,6 +596,8 @@ function buildLocalSystemPrompt(step) {
   return [
     'You are Kai, an inquiry engine for middle school students.',
     'Do not answer immediately. Guide with one short interaction.',
+    'Kai chooses the scaffold. Never ask the student which path, lens, move, activity, or interaction helps most.',
+    'All visible choices must be about the student topic itself: meanings, examples, causes, evidence, steps, claims, or actions.',
     'Final answers are allowed only at final_reveal.',
     'Use these tags only: [TYPE:], [TEXT:], [QUESTION:], [OPTA:]..[OPTE:], [ANSWER:], [HINT:], [PAIR1:]..[PAIR4:], [ITEM1:]..[ITEM5:], [ORDER:], [SENTENCE:], [BLANK1:]..[BLANK4:], [FINAL:], [CONNECTION1:]..[CONNECTION4:].',
     'Current step: ' + step.id + '. Preferred interaction: ' + step.interaction + '.',
@@ -672,13 +674,14 @@ function coerceInteraction(interaction, step) {
   if (step.interaction === 'final_reveal') interaction.type = 'final_reveal';
   if (!interaction.text && interaction.type !== 'final_reveal') interaction.text = 'Small step.';
 
-  if ((interaction.type === 'multiple_choice' || interaction.type === 'tap_choice') && interaction.options.length < 2) {
+  if ((interaction.type === 'multiple_choice' || interaction.type === 'tap_choice') && (interaction.options.length < 2 || isMetaInteraction(interaction))) {
     return buildFallbackInteraction(step);
   }
+  if (interaction.type === 'true_false' && isMetaInteraction(interaction)) return buildFallbackInteraction(step);
   if (interaction.type === 'true_false' && !interaction.answer) interaction.answer = 'true';
-  if (interaction.type === 'match' && interaction.pairs.length < 2) return buildFallbackInteraction(step);
-  if (interaction.type === 'sort' && interaction.items.length < 3) return buildFallbackInteraction(step);
-  if (interaction.type === 'fill_blanks' && !interaction.sentence) return buildFallbackInteraction(step);
+  if (interaction.type === 'match' && (interaction.pairs.length < 2 || isMetaInteraction(interaction))) return buildFallbackInteraction(step);
+  if (interaction.type === 'sort' && (interaction.items.length < 3 || isMetaInteraction(interaction))) return buildFallbackInteraction(step);
+  if (interaction.type === 'fill_blanks' && (!interaction.sentence || isMetaInteraction(interaction))) return buildFallbackInteraction(step);
   if (interaction.type === 'final_reveal' && !interaction.finalAnswer) {
     interaction.finalAnswer = 'You built the reasoning path. The final answer is ready to confirm with Kai.';
   }
@@ -686,35 +689,32 @@ function coerceInteraction(interaction, step) {
 }
 
 function buildFallbackInteraction(step, errorMessage) {
+  var fallback = getContentFallback();
   var base = {
     type: step.interaction,
     stepId: step.id,
     stepLabel: step.label,
-    text: errorMessage ? 'Kai needs a simpler path.' : 'Start with a clue.',
-    question: 'Which move helps most?',
-    options: ['Find a clue', 'Test a claim', 'Match examples', 'Build a sentence'],
+    text: errorMessage ? 'Kai will use a smaller step.' : fallback.text,
+    question: fallback.question,
+    options: fallback.options.slice(),
     answer: 'A',
-    hint: 'Look for the option that creates evidence.',
-    pairs: [
-      { left: 'clue', right: 'notice' },
-      { left: 'example', right: 'test' },
-      { left: 'action', right: 'try' }
-    ],
-    items: ['clue', 'example', 'test', 'explain'],
+    hint: fallback.hint,
+    pairs: fallback.pairs.slice(),
+    items: fallback.items.slice(),
     order: ['1', '2', '3', '4'],
-    sentence: 'I used ___ and ___ to build ___.',
-    blanks: ['clues', 'evidence', 'understanding'],
+    sentence: fallback.sentence,
+    blanks: fallback.blanks.slice(),
     finalAnswer: '',
     connections: []
   };
   if (step.interaction === 'true_false') {
-    base.text = 'A clue is not the final answer.';
+    base.text = fallback.claim;
     base.question = 'True or false?';
     base.answer = 'true';
   }
   if (step.interaction === 'short_answer') {
-    base.text = 'Use one small thought.';
-    base.question = 'What clue helped most?';
+    base.text = fallback.text;
+    base.question = fallback.shortQuestion;
   }
   if (step.interaction === 'final_reveal') {
     base.type = 'final_reveal';
@@ -722,6 +722,113 @@ function buildFallbackInteraction(step, errorMessage) {
     base.finalAnswer = 'You completed the inquiry path. Kai could not reach the live model, so try once more to reveal the exact answer.';
   }
   return base;
+}
+
+function getContentFallback() {
+  var topic = getQuestionTopic();
+  var topicLabel = topic.length > 32 ? 'this topic' : topic;
+  var bank = {
+    concept: {
+      text: 'Look at the idea itself.',
+      question: 'Which meaning fits ' + topicLabel + '?',
+      options: ['A bigger idea', 'Only one object', 'A random number', 'A place name'],
+      claim: topicLabel + ' can be an idea with examples.',
+      hint: 'A concept has meaning and examples.',
+      pairs: [
+        { left: topicLabel, right: 'main idea' },
+        { left: 'example', right: 'real case' },
+        { left: 'use', right: 'where it appears' }
+      ],
+      items: ['idea', 'example', 'pattern', 'meaning'],
+      sentence: topicLabel + ' means ___ connected to ___.',
+      blanks: ['idea', 'examples'],
+      shortQuestion: 'Name one example.'
+    },
+    fact: {
+      text: 'Find the deciding evidence.',
+      question: 'Which clue proves the fact?',
+      options: ['A measurement', 'A guess', 'A mood', 'A color'],
+      claim: 'A fact needs evidence.',
+      hint: 'Facts need a checkable clue.',
+      pairs: [
+        { left: 'fact', right: 'evidence' },
+        { left: 'measure', right: 'number or rule' },
+        { left: 'source', right: 'where to check' }
+      ],
+      items: ['question', 'measure', 'evidence', 'answer'],
+      sentence: 'The fact is supported by ___ and ___.',
+      blanks: ['evidence', 'measurement'],
+      shortQuestion: 'Name the evidence clue.'
+    },
+    mechanism: {
+      text: 'Follow the change.',
+      question: 'What starts the process?',
+      options: ['Input', 'Decoration', 'Opinion', 'Random label'],
+      claim: 'A mechanism links input to output.',
+      hint: 'Mechanisms show how change happens.',
+      pairs: [
+        { left: 'input', right: 'starts' },
+        { left: 'process', right: 'changes' },
+        { left: 'output', right: 'result' }
+      ],
+      items: ['input', 'process', 'output', 'effect'],
+      sentence: topicLabel + ' works by turning ___ into ___.',
+      blanks: ['input', 'output'],
+      shortQuestion: 'Name the output.'
+    },
+    comparison: {
+      text: 'Compare one feature.',
+      question: 'Which feature can we compare?',
+      options: ['Purpose', 'Random mood', 'Spelling only', 'Noise'],
+      claim: 'A fair comparison uses one feature.',
+      hint: 'Compare the same feature on both sides.',
+      pairs: [
+        { left: 'similar', right: 'same feature' },
+        { left: 'different', right: 'contrast' },
+        { left: 'feature', right: 'comparison point' }
+      ],
+      items: ['choose feature', 'side A', 'side B', 'contrast'],
+      sentence: 'A fair comparison uses ___ to show ___.',
+      blanks: ['feature', 'difference'],
+      shortQuestion: 'Name one feature.'
+    },
+    problem_solution: {
+      text: 'Start with the problem.',
+      question: 'Which part should a solution target?',
+      options: ['Cause', 'Random detail', 'Color only', 'Name only'],
+      claim: 'A useful solution matches a cause.',
+      hint: 'Good solutions target causes.',
+      pairs: [
+        { left: 'problem', right: 'what hurts' },
+        { left: 'cause', right: 'why it happens' },
+        { left: 'solution', right: 'what changes it' }
+      ],
+      items: ['problem', 'cause', 'action', 'result'],
+      sentence: 'A solution changes ___ by acting on ___.',
+      blanks: ['problem', 'cause'],
+      shortQuestion: 'Name one cause.'
+    }
+  };
+  return bank[state.questionType] || bank.concept;
+}
+
+function isMetaInteraction(interaction) {
+  var text = [
+    interaction.text,
+    interaction.question,
+    (interaction.options || []).join(' '),
+    (interaction.items || []).join(' '),
+    (interaction.pairs || []).map(function(pair) { return pair.left + ' ' + pair.right; }).join(' ')
+  ].join(' ').toLowerCase();
+  return /which (move|path|interaction|activity|strategy)|move helps|path should|best lens|which lens|find a clue|test a claim|match examples|build a sentence/.test(text);
+}
+
+function getQuestionTopic() {
+  return String(state.question || 'this topic')
+    .replace(/^(what|who|where|when|why|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\s+/i, '')
+    .replace(/^(what|who|where|when|why|how)\s+/i, '')
+    .replace(/[?.!]+$/g, '')
+    .trim() || 'this topic';
 }
 
 function getKaiText(interaction) {
